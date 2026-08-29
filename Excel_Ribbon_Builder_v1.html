@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Ribbon Advanced Workspace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .excel-green { background-color: #107c41; }
+        .excel-green-dark { background-color: #0b582e; }
+        .excel-ribbon-bg { background-color: #f3f2f1; }
+        .excel-border { border-color: #d1d5db; }
+        
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        
+        .active-tab {
+            background-color: #ffffff !important;
+            color: #107c41 !important;
+            border-bottom: 2px solid #107c41 !important;
+            font-weight: 600;
+        }
+        
+        .tree-node-selected {
+            background-color: #e8f5e9;
+            border-left: 4px solid #107c41;
+        }
+        .app-shell {
+            width: 100%;
+            height: 100%;
+            min-width: 900px;
+            min-height: 640px;
+            max-width: 100vw;
+            max-height: 100vh;
+            resize: both;
+            overflow: hidden;
+        }
+        .resizable-pane {
+            overflow: auto;
+        }
+        .panel-resizer {
+            width: 6px;
+            flex-shrink: 0;
+            cursor: col-resize;
+            background: linear-gradient(90deg, transparent 0%, rgba(16, 124, 65, 0.15) 50%, transparent 100%);
+            transition: background-color 0.2s ease;
+        }
+        .panel-resizer:hover {
+            background: linear-gradient(90deg, transparent 0%, rgba(16, 124, 65, 0.35) 50%, transparent 100%);
+        }
+        .vertical-resizer {
+            height: 6px;
+            flex-shrink: 0;
+            cursor: row-resize;
+            background: linear-gradient(180deg, transparent 0%, rgba(16, 124, 65, 0.15) 50%, transparent 100%);
+            transition: background-color 0.2s ease;
+        }
+        .vertical-resizer:hover {
+            background: linear-gradient(180deg, transparent 0%, rgba(16, 124, 65, 0.35) 50%, transparent 100%);
+        }
+        .left-panel, .right-panel {
+            flex: 0 0 var(--panel-width, 280px);
+            width: var(--panel-width, 280px);
+            min-width: 280px;
+            max-width: 40vw;
+        }
+        .preview-panel {
+            height: var(--preview-height, 112px);
+            min-height: 90px;
+            max-height: 220px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col overflow-hidden text-gray-800 text-sm">
+    <div class="app-shell flex flex-col">
+
+    <!-- TOP SECTION: Excel Style Ribbon Bar Preview -->
+    <header class="bg-emerald-900 text-white flex-none">
+        <div class="px-4 py-1.5 flex justify-between items-center bg-emerald-950 border-b border-emerald-800">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid font-bold text-xl text-emerald-400 fa-file-excel"></i>
+                <span class="font-bold text-base tracking-wide text-white">Excel Ribbon Workspace Builder</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <select id="scope-select" onchange="updateScope()" class="bg-emerald-900 border border-emerald-700 text-white rounded px-2 py-0.5 text-sm focus:outline-none">
+                    <option value="workbook">현재 통합 문서 (customUI.xml)</option>
+                    <option value="global">모든 엑셀 파일 (Add-in / Global)</option>
+                </select>
+                <button onclick="downloadAll()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded flex items-center gap-1 font-semibold transition">
+                    <i class="fa-solid fa-download text-sm"></i> 전체 다운로드
+                </button>
+            </div>
+        </div>
+
+        <!-- Ribbon Live Tabs Preview Navigation -->
+        <div class="bg-emerald-800 px-2 flex items-end gap-1 pt-1 overflow-x-auto border-b border-emerald-700" id="ribbon-tabs-header">
+            <!-- Tabs dynamically rendered here -->
+        </div>
+
+        <!-- Ribbon Toolbar Content Preview -->
+        <div class="excel-ribbon-bg border-b border-gray-300 p-2 text-gray-800 preview-panel flex items-center overflow-x-auto gap-4 shadow-inner" id="ribbon-live-preview">
+            <!-- Selected Tab's Groups and Items dynamically rendered here -->
+        </div>
+        <div class="vertical-resizer" id="vertical-resizer" title="드래그해서 상단 미리보기 높이 조절"></div>
+    </header>
+
+    <!-- MAIN WORKSPACE: Left (Tree & Actions), Center (XML/VBA Code), Right (Properties) -->
+    <main class="flex-1 flex overflow-hidden">
+        
+        <!-- LEFT PANEL: Structure Tree & Action Controls -->
+        <section class="left-panel bg-white border-r border-gray-300 flex flex-col h-full shadow-sm resizable-pane" data-panel="left" style="--panel-width: 280px;">
+            <div class="p-2.5 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <span class="font-bold text-emerald-800 text-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-sitemap"></i> 리본 구조 관리
+                </span>
+                <div class="flex gap-1">
+                    <button onclick="addTab()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-2 py-1 rounded text-xs font-medium transition" title="새 탭 추가">
+                        + 탭
+                    </button>
+                </div>
+            </div>
+
+            <!-- Structure Tree Container -->
+            <div class="flex-1 overflow-y-auto p-2 space-y-2" id="tree-container">
+                <!-- Dynamic Tree Node Structure -->
+            </div>
+        </section>
+
+        <div class="panel-resizer" data-resizer="left" title="드래그해서 왼쪽 패널 너비 조절"></div>
+
+        <!-- CENTER PANEL: Code View (XML & VBA Modules) -->
+        <section class="flex-1 min-w-[360px] bg-gray-900 border-r border-gray-300 flex flex-col h-full">
+            <div class="bg-gray-800 p-2 border-b border-gray-700 flex justify-between items-center text-white">
+                <div class="flex items-center gap-2">
+                    <button id="btn-show-xml" onclick="switchCodeTab('xml')" class="px-3 py-1 rounded bg-emerald-600 font-bold text-sm text-white">
+                        customUI.xml
+                    </button>
+                    <button id="btn-show-vba" onclick="switchCodeTab('vba')" class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 font-bold text-sm text-gray-300">
+                        VBA Module (.bas)
+                    </button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="copyCode()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-2.5 py-1 rounded text-xs transition">
+                        <i class="fa-regular fa-copy"></i> 복사
+                    </button>
+                    <button onclick="downloadCurrentCode()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-2.5 py-1 rounded text-xs transition">
+                        <i class="fa-solid fa-file-arrow-down"></i> 저장
+                    </button>
+                </div>
+            </div>
+
+            <!-- Code Textareas -->
+            <div class="flex-1 relative p-2 font-mono">
+                <textarea id="xml-output" readonly class="w-full h-full bg-gray-950 text-emerald-400 p-3 text-sm leading-relaxed rounded border border-gray-800 focus:outline-none resize-none"></textarea>
+                <textarea id="vba-output" readonly class="w-full h-full bg-gray-950 text-blue-300 p-3 text-sm leading-relaxed rounded border border-gray-800 focus:outline-none resize-none hidden"></textarea>
+            </div>
+        </section>
+
+        <div class="panel-resizer" data-resizer="right" title="드래그해서 오른쪽 패널 너비 조절"></div>
+
+        <!-- RIGHT PANEL: Item Properties Editor -->
+        <section class="right-panel bg-white flex flex-col h-full shadow-sm resizable-pane" data-panel="right" style="--panel-width: 280px;">
+            <div class="p-2.5 bg-gray-50 border-b border-gray-200">
+                <span class="font-bold text-emerald-800 text-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-sliders"></i> 속성 설정
+                </span>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-3 space-y-4" id="property-editor">
+                <!-- Dynamic Property Inputs based on selected tree item -->
+            </div>
+        </section>
+
+    </main>
+    </div>
+
+    <!-- Icon Selection Modal -->
+    <div id="icon-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-3/4 max-w-2xl max-h-[80vh] flex flex-col">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-lg">
+                <h3 class="font-bold text-gray-800 text-base"><i class="fa-solid fa-icons mr-2 text-emerald-600"></i>아이콘 선택</h3>
+                <button onclick="closeIconModal()" class="text-gray-500 hover:text-red-500 transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 grid grid-cols-4 sm:grid-cols-6 gap-3" id="icon-modal-grid">
+                <!-- Icons injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM PANEL: Single Line Log Bar -->
+    <footer class="h-7 bg-emerald-900 border-t border-emerald-800 text-emerald-100 px-3 flex items-center justify-between text-xs flex-none">
+        <div class="flex items-center gap-2 overflow-hidden truncate">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-semibold text-emerald-300 uppercase tracking-wider text-[11px]">LOG:</span>
+            <span id="log-message" class="truncate text-emerald-100">시스템이 정상적으로 로드되었습니다.</span>
+        </div>
+        <div class="text-[11px] text-emerald-400 whitespace-nowrap">
+            Excel Custom UI v2.5
+        </div>
+    </footer>
+
+    <script>
+        // State
+        let data = {
+            tabs: [
+                {
+                    id: 'TabMain',
+                    label: '메인 탭',
+                    groups: [
+                        {
+                            id: 'GroupAction',
+                            label: '작업',
+                            items: [
+                                { id: 'btnRun', type: 'button', label: '실행', size: 'large', imageMso: 'Play', onAction: 'ButtonRun_Click' },
+                                { id: 'cmbDept', type: 'comboBox', label: '부서', size: 'normal', imageMso: 'Users', onChange: 'ComboDept_Change', itemCount: 3, items: [
+                                    { id: 'sales', label: '영업' },
+                                    { id: 'dev', label: '개발' },
+                                    { id: 'hr', label: '인사' }
+                                ] },
+                                { id: 'ddFormat', type: 'dropDown', label: '출력 형식', size: 'normal', imageMso: 'Printer', onAction: 'DropDownFormat_Click', itemCount: 3, items: [
+                                    { id: 'pdf', label: 'PDF' },
+                                    { id: 'xlsx', label: 'Excel' },
+                                    { id: 'docx', label: 'Word' }
+                                ] }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        let selectedTabIdx = 0;
+        let selectedGroupIdx = 0;
+        let selectedItemIdx = null; // null if group or tab selected
+        let activeCodeTab = 'xml'; // 'xml' | 'vba'
+        let draggedControl = null;
+
+        // Icons Library with SVG representation & imageMso string
+        const iconsList = [
+            { id: 'HappyFace', name: '스마일 (HappyFace)', svg: `<svg class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2zm-7.535 4a1 1 0 011.415-.142 4.992 4.992 0 006.24 0 1 1 0 011.276 1.544 6.992 6.992 0 01-8.788 0 1 1 0 01-.143-1.402z" clip-rule="evenodd"/></svg>` },
+            { id: 'FileSave', name: '저장 (FileSave)', svg: `<svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586l-1.293-1.293z"/><path d="M3 5a2 2 0 012-2h11a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm2 0v10h11V5H5z"/></svg>` },
+            { id: 'Refresh', name: '새로고침 (Refresh)', svg: `<svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>` },
+            { id: 'Chart', name: '차트 (Chart)', svg: `<svg class="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>` },
+            { id: 'Filter', name: '필터 (Filter)', svg: `<svg class="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/></svg>` },
+            { id: 'Find', name: '검색 (Find)', svg: `<svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>` },
+            { id: 'PivotTable', name: '피벗 테이블 (PivotTable)', svg: `<svg class="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20"><path opacity="0.4" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2H3V4z"/><path fill-rule="evenodd" d="M3 8h6v8H4a1 1 0 01-1-1V8zm8 8v-8h6v7a1 1 0 01-1 1h-5z" clip-rule="evenodd"/></svg>` },
+            { id: 'MacroSec', name: '매크로 (MacroSec)', svg: `<svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>` },
+            { id: 'DocumentAdd', name: '새 문서 (DocumentAdd)', svg: `<svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" clip-rule="evenodd" /></svg>` },
+            { id: 'Trash', name: '삭제 (Trash)', svg: `<svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>` },
+            { id: 'Settings', name: '설정 (Settings)', svg: `<svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>` },
+            { id: 'Copy', name: '복사 (Copy)', svg: `<svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" /><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" /></svg>` },
+            { id: 'Printer', name: '인쇄 (Printer)', svg: `<svg class="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" /></svg>` },
+            { id: 'FolderOpen', name: '열기 (FolderOpen)', svg: `<svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM4 6h12v8H4V6z" clip-rule="evenodd" /></svg>` },
+            { id: 'User', name: '사용자 (User)', svg: `<svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>` },
+            { id: 'Users', name: '그룹 (Users)', svg: `<svg class="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 2.71 6.97 6.97 0 00-1.5 4.33A1.002 1.002 0 009.5 18H3v-1a5 5 0 015-5z" /></svg>` },
+            { id: 'Star', name: '즐겨찾기 (Star)', svg: `<svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>` },
+            { id: 'Calendar', name: '일정 (Calendar)', svg: `<svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg>` },
+            { id: 'Clock', name: '시간 (Clock)', svg: `<svg class="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" /></svg>` },
+            { id: 'CloudDownload', name: '다운로드 (CloudDownload)', svg: `<svg class="w-5 h-5 text-sky-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2 10a8 8 0 1116 0A8 8 0 012 10zm6-3a1 1 0 012 0v3.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L8 10.586V7z" clip-rule="evenodd" /></svg>` },
+            { id: 'Mail', name: '메일 (Mail)', svg: `<svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>` },
+            { id: 'LockClosed', name: '잠금 (LockClosed)', svg: `<svg class="w-5 h-5 text-gray-800" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" /></svg>` },
+            { id: 'Key', name: '열쇠 (Key)', svg: `<svg class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd" /></svg>` },
+            { id: 'Camera', name: '카메라 (Camera)', svg: `<svg class="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>` },
+            { id: 'Photograph', name: '이미지 (Photograph)', svg: `<svg class="w-5 h-5 text-teal-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" /></svg>` },
+            { id: 'Globe', name: '웹 (Globe)', svg: `<svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clip-rule="evenodd" /></svg>` },
+            { id: 'Bell', name: '알림 (Bell)', svg: `<svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" /></svg>` },
+            { id: 'Chat', name: '댓글 (Chat)', svg: `<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" /></svg>` },
+            { id: 'CheckCircle', name: '완료 (CheckCircle)', svg: `<svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>` },
+            { id: 'Lightning', name: '번개 (Lightning)', svg: `<svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" /></svg>` },
+            { id: 'Book', name: '책 (Book)', svg: `<svg class="w-5 h-5 text-indigo-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg>` }
+        ];
+
+        const controlTypes = [
+            { type: 'button', label: '버튼 (Button)' },
+            { type: 'toggleButton', label: '토글 버튼 (ToggleButton)' },
+            { type: 'checkBox', label: '체크박스 (CheckBox)' },
+            { type: 'editBox', label: '입력상자 (EditBox)' },
+            { type: 'comboBox', label: '콤보박스 (ComboBox)' },
+            { type: 'dropDown', label: '드롭다운 (DropDown)' },
+            { type: 'labelControl', label: '레이블 (Label)' },
+            { type: 'separator', label: '구분선 (Separator)' }
+        ];
+
+        const layoutStorageKey = 'excel-ribbon-layout-v1';
+
+        function log(msg) {
+            document.getElementById('log-message').innerText = msg;
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function escapeXml(value = '') {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&apos;');
+        }
+
+        function escapeVbaString(value = '') {
+            return String(value)
+                .replace(/"/g, '""');
+        }
+
+        function parsePx(value, fallback = 280) {
+            const parsed = parseInt(value, 10);
+            return Number.isNaN(parsed) ? fallback : parsed;
+        }
+
+        function getControlOptions(item) {
+            if (Array.isArray(item?.items) && item.items.length) return item.items;
+            const count = Math.max(1, parseInt(item?.itemCount || 3, 10));
+            return Array.from({ length: count }, (_, idx) => ({
+                id: `${item?.id || 'item'}_${idx + 1}`,
+                label: `항목 ${idx + 1}`
+            }));
+        }
+
+        function ensureControlOptions(item) {
+            if (!item) return [];
+            if (!Array.isArray(item.items) || item.items.length === 0) {
+                item.items = getControlOptions(item);
+            }
+            return item.items;
+        }
+
+        function saveLayout() {
+            const leftPanel = document.querySelector('[data-panel="left"]');
+            const rightPanel = document.querySelector('[data-panel="right"]');
+            const preview = document.getElementById('ribbon-live-preview');
+
+            const layout = {
+                leftWidth: parsePx(leftPanel?.style.getPropertyValue('--panel-width') || '280', 280),
+                rightWidth: parsePx(rightPanel?.style.getPropertyValue('--panel-width') || '280', 280),
+                previewHeight: parsePx(preview?.style.getPropertyValue('--preview-height') || preview?.style.height || '112', 112)
+            };
+
+            localStorage.setItem(layoutStorageKey, JSON.stringify(layout));
+        }
+
+        function applyLayout() {
+            const saved = JSON.parse(localStorage.getItem(layoutStorageKey) || '{}');
+            const leftPanel = document.querySelector('[data-panel="left"]');
+            const rightPanel = document.querySelector('[data-panel="right"]');
+            const preview = document.getElementById('ribbon-live-preview');
+            const maxPanelWidth = Math.max(320, Math.floor(window.innerWidth * 0.4));
+            const leftWidth = clamp(saved.leftWidth || 280, 280, maxPanelWidth);
+            const rightWidth = clamp(saved.rightWidth || 280, 280, maxPanelWidth);
+            const previewHeight = clamp(saved.previewHeight || 112, 90, 220);
+
+            leftPanel?.style.setProperty('--panel-width', `${leftWidth}px`);
+            rightPanel?.style.setProperty('--panel-width', `${rightWidth}px`);
+            preview?.style.setProperty('--preview-height', `${previewHeight}px`);
+            preview?.style.setProperty('height', `${previewHeight}px`);
+        }
+
+        function attachLayoutResizeHandlers() {
+            document.querySelectorAll('.panel-resizer').forEach((resizer) => {
+                resizer.addEventListener('pointerdown', (event) => {
+                    event.preventDefault();
+                    const type = resizer.dataset.resizer;
+                    const leftPanel = document.querySelector('[data-panel="left"]');
+                    const rightPanel = document.querySelector('[data-panel="right"]');
+                    const startX = event.clientX;
+                    const startLeftWidth = parsePx(leftPanel?.style.getPropertyValue('--panel-width') || '280', 280);
+                    const startRightWidth = parsePx(rightPanel?.style.getPropertyValue('--panel-width') || '280', 280);
+
+                    const handleMove = (moveEvent) => {
+                        const deltaX = moveEvent.clientX - startX;
+                        const maxPanelWidth = Math.max(320, Math.floor(window.innerWidth * 0.4));
+
+                        if (type === 'left') {
+                            const nextWidth = clamp(startLeftWidth + deltaX, 280, maxPanelWidth);
+                            leftPanel?.style.setProperty('--panel-width', `${nextWidth}px`);
+                        } else if (type === 'right') {
+                            const nextWidth = clamp(startRightWidth - deltaX, 280, maxPanelWidth);
+                            rightPanel?.style.setProperty('--panel-width', `${nextWidth}px`);
+                        }
+
+                        saveLayout();
+                    };
+
+                    const handleUp = () => {
+                        document.removeEventListener('pointermove', handleMove);
+                        document.removeEventListener('pointerup', handleUp);
+                        document.body.style.cursor = '';
+                    };
+
+                    document.addEventListener('pointermove', handleMove);
+                    document.addEventListener('pointerup', handleUp);
+                    document.body.style.cursor = 'col-resize';
+                });
+            });
+
+            const verticalResizer = document.getElementById('vertical-resizer');
+            const preview = document.getElementById('ribbon-live-preview');
+
+            verticalResizer?.addEventListener('pointerdown', (event) => {
+                event.preventDefault();
+                const startY = event.clientY;
+                const startHeight = parsePx(preview?.style.getPropertyValue('--preview-height') || preview?.style.height || '112', 112);
+
+                const handleMove = (moveEvent) => {
+                    const deltaY = moveEvent.clientY - startY;
+                    const nextHeight = clamp(startHeight + deltaY, 90, 220);
+                    preview?.style.setProperty('--preview-height', `${nextHeight}px`);
+                    preview?.style.setProperty('height', `${nextHeight}px`);
+                    saveLayout();
+                };
+
+                const handleUp = () => {
+                    document.removeEventListener('pointermove', handleMove);
+                    document.removeEventListener('pointerup', handleUp);
+                    document.body.style.cursor = '';
+                };
+
+                document.addEventListener('pointermove', handleMove);
+                document.addEventListener('pointerup', handleUp);
+                document.body.style.cursor = 'row-resize';
+            });
+        }
+
+        function init() {
+            applyLayout();
+            attachLayoutResizeHandlers();
+            window.addEventListener('resize', applyLayout);
+            renderTabsHeader();
+            renderLivePreview();
+            renderTree();
+            renderProperties();
+            generateCode();
+            log('리본 워크스페이스가 준비되었습니다.');
+        }
+
+        // Render Top Header Tabs
+        function renderTabsHeader() {
+            const container = document.getElementById('ribbon-tabs-header');
+            container.innerHTML = '';
+
+            data.tabs.forEach((tab, tIdx) => {
+                const btn = document.createElement('button');
+                btn.className = `px-3 py-1 text-sm rounded-t font-medium transition ${tIdx === selectedTabIdx ? 'active-tab shadow-sm' : 'text-emerald-100 hover:bg-emerald-700/50'}`;
+                btn.innerText = tab.label || '무제 탭';
+                btn.onclick = () => {
+                    selectedTabIdx = tIdx;
+                    selectedGroupIdx = 0;
+                    selectedItemIdx = null;
+                    renderTabsHeader();
+                    renderLivePreview();
+                    renderTree();
+                    renderProperties();
+                    log(`탭 선택: ${tab.label}`);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function reorderItemInGroup(tabIdx, groupIdx, fromIndex, toIndex) {
+            const group = data.tabs[tabIdx]?.groups?.[groupIdx];
+            if (!group || fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+
+            const items = group.items;
+            if (fromIndex >= items.length || toIndex >= items.length) return;
+
+            const [movedItem] = items.splice(fromIndex, 1);
+            const adjustedToIndex = toIndex > fromIndex ? toIndex - 1 : toIndex;
+            items.splice(adjustedToIndex, 0, movedItem);
+
+            const newIndex = items.findIndex(item => item.id === movedItem.id);
+            selectedTabIdx = tabIdx;
+            selectedGroupIdx = groupIdx;
+            selectedItemIdx = newIndex;
+            refreshAll();
+            log('컨트롤 순서가 변경되었습니다.');
+        }
+
+        function moveItemBetweenGroups(tabIdx, fromGroupIdx, fromIndex, toGroupIdx, toIndex = null) {
+            const sourceGroup = data.tabs[tabIdx]?.groups?.[fromGroupIdx];
+            const targetGroup = data.tabs[tabIdx]?.groups?.[toGroupIdx];
+            if (!sourceGroup || !targetGroup) return;
+
+            if (fromGroupIdx === toGroupIdx) {
+                reorderItemInGroup(tabIdx, fromGroupIdx, fromIndex, toIndex ?? fromIndex);
+                return;
+            }
+
+            const sourceItems = sourceGroup.items;
+            const targetItems = targetGroup.items;
+            if (fromIndex < 0 || fromIndex >= sourceItems.length) return;
+
+            const [movedItem] = sourceItems.splice(fromIndex, 1);
+            const insertIndex = toIndex == null ? targetItems.length : Math.min(toIndex, targetItems.length);
+            targetItems.splice(insertIndex, 0, movedItem);
+
+            selectedTabIdx = tabIdx;
+            selectedGroupIdx = toGroupIdx;
+            selectedItemIdx = insertIndex;
+            refreshAll();
+            log('컨트롤이 다른 그룹으로 이동되었습니다.');
+        }
+
+        // Render Ribbon Live Preview Bar
+        function renderLivePreview() {
+            const preview = document.getElementById('ribbon-live-preview');
+            preview.innerHTML = '';
+
+            const currentTab = data.tabs[selectedTabIdx];
+            if (!currentTab || !currentTab.groups.length) {
+                preview.innerHTML = `<span class="text-gray-400 italic text-sm">그룹이 없습니다. 좌측 창에서 그룹을 추가하세요.</span>`;
+                return;
+            }
+
+            currentTab.groups.forEach((grp, gIdx) => {
+                const groupContainer = document.createElement('div');
+                groupContainer.className = 'flex flex-col justify-between h-full px-2 py-1 border-r border-gray-300 min-w-[100px] bg-white rounded-sm shadow-2xs transition-all';
+                groupContainer.dataset.groupIndex = gIdx;
+
+                const itemsBox = document.createElement('div');
+                itemsBox.className = 'flex items-center gap-1.5 flex-1';
+
+                let currentNormalColumn = null;
+
+                grp.items.forEach((item, iIdx) => {
+                    const iconObj = iconsList.find(ic => ic.id === item.imageMso) || iconsList[0];
+                    const isSelected = selectedTabIdx === selectedTabIdx && selectedGroupIdx === gIdx && selectedItemIdx === iIdx;
+
+                    const onClickHandler = () => {
+                        if (!isSelected) selectItem(selectedTabIdx, gIdx, iIdx);
+                    };
+
+                    const wrapperClass = `flex items-center gap-1.5 px-1.5 py-1 rounded transition border cursor-pointer ${isSelected ? 'border-emerald-600 bg-emerald-50/80 ring-1 ring-emerald-500' : 'border-transparent hover:bg-emerald-50'}`;
+
+                    let itemEl;
+
+                    if (item.type === 'separator') {
+                        itemEl = document.createElement('div');
+                        itemEl.className = `h-14 w-[1px] bg-gray-300 mx-1 cursor-grab transition ${isSelected ? 'ring-2 ring-emerald-500 bg-emerald-500' : 'hover:bg-gray-400'}`;
+                        itemEl.onclick = onClickHandler;
+                    } else if (item.type === 'button' || item.type === 'toggleButton') {
+                        itemEl = document.createElement('button');
+                        if (item.size === 'large') {
+                            itemEl.className = `flex flex-col items-center justify-center p-1.5 rounded transition border cursor-grab ${isSelected ? 'border-emerald-600 bg-emerald-50/80 ring-1 ring-emerald-500' : 'border-transparent hover:bg-emerald-50'}`;
+                            const largeSvg = iconObj.svg.replace('w-5 h-5', 'w-10 h-10');
+                            itemEl.innerHTML = `
+                                <div class="mb-1">${largeSvg}</div>
+                                <span class="text-[11px] leading-tight text-center font-medium">${item.label}</span>
+                            `;
+                        } else {
+                            itemEl.className = wrapperClass.replace('cursor-pointer', 'cursor-grab');
+                            itemEl.innerHTML = `
+                                <div>${iconObj.svg}</div>
+                                <span class="text-[11px] font-medium">${item.label}</span>
+                            `;
+                        }
+                        itemEl.onclick = onClickHandler;
+                    } else if (item.type === 'checkBox') {
+                        itemEl = document.createElement('div');
+                        itemEl.className = wrapperClass.replace('cursor-pointer', 'cursor-grab');
+                        itemEl.onclick = onClickHandler;
+                        itemEl.innerHTML = `
+                            <input type="checkbox" onclick="event.stopPropagation();" class="rounded border-gray-300 text-emerald-600 cursor-pointer">
+                            <span class="text-[11px]">${item.label}</span>
+                        `;
+                    } else if (item.type === 'editBox') {
+                        itemEl = document.createElement('div');
+                        itemEl.className = wrapperClass.replace('cursor-pointer', 'cursor-grab');
+                        itemEl.onclick = onClickHandler;
+                        itemEl.innerHTML = `
+                            <div>${iconObj.svg}</div>
+                            <span class="text-[11px] font-medium">${item.label}</span>
+                            <input type="text" onclick="event.stopPropagation();" class="w-24 h-5 text-[11px] px-1.5 border border-gray-300 rounded focus:outline-none focus:border-emerald-500 bg-white" placeholder="입력...">
+                        `;
+                    } else if (item.type === 'comboBox' || item.type === 'dropDown') {
+                        const options = ensureControlOptions(item);
+                        itemEl = document.createElement('div');
+                        itemEl.className = wrapperClass.replace('cursor-pointer', 'cursor-grab');
+                        itemEl.onclick = onClickHandler;
+                        itemEl.innerHTML = `
+                            <div>${iconObj.svg}</div>
+                            <span class="text-[11px] font-medium">${item.label}</span>
+                            <select onclick="event.stopPropagation();" class="w-24 h-5 text-[11px] px-1 border border-gray-300 rounded focus:outline-none focus:border-emerald-500 bg-white">
+                                <option>선택...</option>
+                                ${options.map(option => `<option value="${option.id}">${option.label}</option>`).join('')}
+                            </select>
+                        `;
+                    } else if (item.type === 'labelControl') {
+                        itemEl = document.createElement('div');
+                        itemEl.className = wrapperClass.replace('cursor-pointer', 'cursor-grab');
+                        itemEl.onclick = onClickHandler;
+                        itemEl.innerHTML = `
+                            <div>${iconObj.svg}</div>
+                            <span class="text-[11px]">${item.label}</span>
+                        `;
+                    }
+
+                    itemEl.setAttribute('draggable', 'true');
+                    itemEl.dataset.itemIndex = iIdx;
+                    itemEl.dataset.groupIndex = gIdx;
+                    itemEl.addEventListener('dragstart', (event) => {
+                        draggedControl = { tabIdx: selectedTabIdx, groupIdx: gIdx, itemIdx: iIdx };
+                        event.dataTransfer?.setData('text/plain', JSON.stringify(draggedControl));
+                        event.dataTransfer.effectAllowed = 'move';
+                        itemEl.classList.add('opacity-70', 'ring-2', 'ring-emerald-500', 'scale-105');
+                    });
+                    itemEl.addEventListener('dragend', () => {
+                        itemEl.classList.remove('opacity-70', 'ring-2', 'ring-emerald-500', 'scale-105');
+                        document.querySelectorAll('.group-drop-target').forEach(el => el.classList.remove('group-drop-target', 'ring-2', 'ring-emerald-400', 'bg-emerald-50'));
+                        draggedControl = null;
+                    });
+                    itemEl.addEventListener('dragover', (event) => {
+                        if (!draggedControl || draggedControl.tabIdx !== selectedTabIdx) return;
+                        event.preventDefault();
+                        itemEl.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-50');
+                    });
+                    itemEl.addEventListener('dragleave', () => {
+                        itemEl.classList.remove('ring-2', 'ring-emerald-400', 'bg-emerald-50');
+                    });
+                    itemEl.addEventListener('drop', (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        itemEl.classList.remove('ring-2', 'ring-emerald-400', 'bg-emerald-50');
+
+                        if (!draggedControl || draggedControl.tabIdx !== selectedTabIdx) return;
+
+                        const draggedData = JSON.parse(event.dataTransfer?.getData('text/plain') || '{}');
+                        if (!draggedData?.itemIdx && draggedData?.itemIdx !== 0) return;
+
+                        if (draggedData.groupIdx === gIdx) {
+                            reorderItemInGroup(selectedTabIdx, gIdx, draggedData.itemIdx, iIdx);
+                        } else {
+                            moveItemBetweenGroups(selectedTabIdx, draggedData.groupIdx, draggedData.itemIdx, gIdx, iIdx);
+                        }
+                    });
+
+                    const isLarge = item.type === 'separator' || (item.size === 'large' && ['button', 'toggleButton'].includes(item.type));
+
+                    if (isLarge) {
+                        itemsBox.appendChild(itemEl);
+                        currentNormalColumn = null;
+                    } else {
+                        if (grp.normalLayout === 'horizontal' || item.placement === 'beside') {
+                            itemsBox.appendChild(itemEl);
+                            currentNormalColumn = null;
+                        } else {
+                            if (!currentNormalColumn || currentNormalColumn.childElementCount >= 3) {
+                                currentNormalColumn = document.createElement('div');
+                                currentNormalColumn.className = 'flex flex-col gap-0.5 justify-center h-full';
+                                itemsBox.appendChild(currentNormalColumn);
+                            }
+                            currentNormalColumn.appendChild(itemEl);
+                        }
+                    }
+                });
+
+                groupContainer.addEventListener('dragover', (event) => {
+                    if (!draggedControl || draggedControl.tabIdx !== selectedTabIdx) return;
+                    event.preventDefault();
+                    groupContainer.classList.add('group-drop-target', 'ring-2', 'ring-emerald-400', 'bg-emerald-50');
+                });
+                groupContainer.addEventListener('dragleave', () => {
+                    groupContainer.classList.remove('group-drop-target', 'ring-2', 'ring-emerald-400', 'bg-emerald-50');
+                });
+                groupContainer.addEventListener('drop', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    groupContainer.classList.remove('group-drop-target', 'ring-2', 'ring-emerald-400', 'bg-emerald-50');
+
+                    if (!draggedControl || draggedControl.tabIdx !== selectedTabIdx) return;
+
+                    const draggedData = JSON.parse(event.dataTransfer?.getData('text/plain') || '{}');
+                    if (!draggedData?.itemIdx && draggedData?.itemIdx !== 0) return;
+
+                    if (draggedData.groupIdx === gIdx) {
+                        reorderItemInGroup(selectedTabIdx, gIdx, draggedData.itemIdx, grp.items.length);
+                    } else {
+                        moveItemBetweenGroups(selectedTabIdx, draggedData.groupIdx, draggedData.itemIdx, gIdx, grp.items.length);
+                    }
+                });
+
+                const groupLabel = document.createElement('div');
+                groupLabel.className = 'text-[10px] text-gray-500 text-center font-semibold border-t border-gray-100 pt-0.5 tracking-tight uppercase truncate';
+                groupLabel.innerText = grp.label;
+
+                groupContainer.appendChild(itemsBox);
+                groupContainer.appendChild(groupLabel);
+                preview.appendChild(groupContainer);
+            });
+        }
+
+        // Render Tree in Left Panel
+        function renderTree() {
+            const container = document.getElementById('tree-container');
+            container.innerHTML = '';
+
+            data.tabs.forEach((tab, tIdx) => {
+                const tabNode = document.createElement('div');
+                const isTabSelected = selectedTabIdx === tIdx && selectedGroupIdx === null && selectedItemIdx === null;
+                
+                tabNode.className = `rounded border border-gray-200 overflow-hidden ${isTabSelected ? 'tree-node-selected' : 'bg-white'}`;
+                
+                tabNode.innerHTML = `
+                    <div class="px-3 py-3 flex items-center justify-between cursor-pointer hover:bg-emerald-50/50" onclick="selectTab(${tIdx})">
+                        <span class="font-bold text-gray-800 flex items-center gap-1.5">
+                            <i class="fa-regular fa-folder text-emerald-700"></i> ${tab.label}
+                        </span>
+                        <div class="flex items-center gap-1">
+                            <button onclick="addGroup(${tIdx}); event.stopPropagation();" class="text-[11px] bg-emerald-100 text-emerald-800 hover:bg-emerald-200 px-1.5 py-0.5 rounded font-semibold">+ 그룹</button>
+                            <button onclick="removeTab(${tIdx}); event.stopPropagation();" class="text-red-400 hover:text-red-600 px-1" title="탭 삭제">×</button>
+                        </div>
+                    </div>
+                `;
+
+                // Render Groups
+                const groupList = document.createElement('div');
+                groupList.className = 'pl-3 pr-1 pb-1 space-y-1';
+
+                tab.groups.forEach((grp, gIdx) => {
+                    const isGroupSelected = selectedTabIdx === tIdx && selectedGroupIdx === gIdx && selectedItemIdx === null;
+                    const groupNode = document.createElement('div');
+                    groupNode.className = `rounded border border-gray-100 p-2.5 ${isGroupSelected ? 'bg-emerald-50 border-emerald-300' : 'bg-gray-50'}`;
+
+                    groupNode.innerHTML = `
+                        <div class="flex items-center justify-between cursor-pointer mb-2" onclick="selectGroup(${tIdx}, ${gIdx})">
+                            <span class="font-semibold text-emerald-900 text-xs flex items-center gap-1">
+                                <i class="fa-solid fa-layer-group text-emerald-600"></i> ${grp.label}
+                            </span>
+                            <div class="flex items-center gap-1">
+                                <select onchange="addItem(${tIdx}, ${gIdx}, this.value); this.selectedIndex=0;" onclick="event.stopPropagation();" class="text-[11px] border border-gray-300 rounded bg-white px-2 py-1 cursor-pointer">
+                                    <option value="">+ 컨트롤</option>
+                                    ${controlTypes.map(c => `<option value="${c.type}">${c.label}</option>`).join('')}
+                                </select>
+                                <button onclick="removeGroup(${tIdx}, ${gIdx}); event.stopPropagation();" class="text-red-400 hover:text-red-600 px-1">×</button>
+                            </div>
+                        </div>
+                    `;
+
+                    // Items under group
+                    const itemsContainer = document.createElement('div');
+                    itemsContainer.className = 'space-y-1.5 pl-2 mt-1';
+
+                    grp.items.forEach((item, iIdx) => {
+                        const isItemSelected = selectedTabIdx === tIdx && selectedGroupIdx === gIdx && selectedItemIdx === iIdx;
+                        const itemNode = document.createElement('div');
+                        itemNode.className = `flex items-center justify-between px-2 py-1.5 rounded cursor-grab text-xs transition ${isItemSelected ? 'bg-emerald-600 text-white font-medium' : 'bg-white hover:bg-gray-100 border border-gray-200'}`;
+                        itemNode.onclick = (e) => { e.stopPropagation(); selectItem(tIdx, gIdx, iIdx); };
+
+                        itemNode.innerHTML = `
+                            <span class="truncate flex items-center gap-1">
+                                <i class="fa-solid fa-cube ${isItemSelected ? 'text-emerald-200' : 'text-gray-400'}"></i> ${item.label}
+                            </span>
+                            <button onclick="removeItem(${tIdx}, ${gIdx}, ${iIdx}); event.stopPropagation();" class="${isItemSelected ? 'text-emerald-200 hover:text-white' : 'text-red-400 hover:text-red-600'}">×</button>
+                        `;
+
+                        itemNode.setAttribute('draggable', 'true');
+                        itemNode.addEventListener('dragstart', (event) => {
+                            draggedControl = { tabIdx: tIdx, groupIdx: gIdx, itemIdx: iIdx };
+                            event.dataTransfer?.setData('text/plain', JSON.stringify(draggedControl));
+                            event.dataTransfer.effectAllowed = 'move';
+                            itemNode.classList.add('opacity-70', 'ring-2', 'ring-emerald-500');
+                        });
+                        itemNode.addEventListener('dragend', () => {
+                            itemNode.classList.remove('opacity-70', 'ring-2', 'ring-emerald-500');
+                            draggedControl = null;
+                        });
+                        itemNode.addEventListener('dragover', (event) => {
+                            if (!draggedControl || draggedControl.tabIdx !== tIdx) return;
+                            event.preventDefault();
+                            itemNode.classList.add('ring-2', 'ring-emerald-300', 'bg-emerald-50');
+                        });
+                        itemNode.addEventListener('dragleave', () => {
+                            itemNode.classList.remove('ring-2', 'ring-emerald-300', 'bg-emerald-50');
+                        });
+                        itemNode.addEventListener('drop', (event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            itemNode.classList.remove('ring-2', 'ring-emerald-300', 'bg-emerald-50');
+
+                            if (!draggedControl || draggedControl.tabIdx !== tIdx) return;
+                            const draggedData = JSON.parse(event.dataTransfer?.getData('text/plain') || '{}');
+                            if (!draggedData?.itemIdx && draggedData?.itemIdx !== 0) return;
+
+                            if (draggedData.groupIdx === gIdx) {
+                                reorderItemInGroup(tIdx, gIdx, draggedData.itemIdx, iIdx);
+                            } else {
+                                moveItemBetweenGroups(tIdx, draggedData.groupIdx, draggedData.itemIdx, gIdx, iIdx);
+                            }
+                        });
+
+                        itemsContainer.appendChild(itemNode);
+                    });
+
+                    groupNode.appendChild(itemsContainer);
+                    groupList.appendChild(groupNode);
+                });
+
+                tabNode.appendChild(groupList);
+                container.appendChild(tabNode);
+            });
+        }
+
+        function updateControlOption(optionIdx, field, val) {
+            if (selectedItemIdx === null) return;
+            const item = data.tabs[selectedTabIdx].groups[selectedGroupIdx].items[selectedItemIdx];
+            if (!['comboBox', 'dropDown'].includes(item.type)) return;
+
+            const options = ensureControlOptions(item);
+            if (!options[optionIdx]) return;
+            options[optionIdx][field] = val;
+            refreshAll(false);
+        }
+
+        function addControlOption() {
+            if (selectedItemIdx === null) return;
+            const item = data.tabs[selectedTabIdx].groups[selectedGroupIdx].items[selectedItemIdx];
+            if (!['comboBox', 'dropDown'].includes(item.type)) return;
+
+            const options = ensureControlOptions(item);
+            const nextIndex = options.length + 1;
+            options.push({ id: `${item.id || 'item'}_${nextIndex}`, label: `항목 ${nextIndex}` });
+            item.itemCount = options.length;
+            refreshAll(false);
+        }
+
+        function removeControlOption(optionIdx) {
+            if (selectedItemIdx === null) return;
+            const item = data.tabs[selectedTabIdx].groups[selectedGroupIdx].items[selectedItemIdx];
+            if (!['comboBox', 'dropDown'].includes(item.type)) return;
+
+            const options = ensureControlOptions(item);
+            if (!options[optionIdx]) return;
+            options.splice(optionIdx, 1);
+            item.itemCount = Math.max(1, options.length);
+            refreshAll(false);
+        }
+
+        // Render Right Property Inspector
+        function renderProperties() {
+            const editor = document.getElementById('property-editor');
+            editor.innerHTML = '';
+
+            const currentTab = data.tabs[selectedTabIdx];
+            if (!currentTab) {
+                editor.innerHTML = `<span class="text-gray-400 italic">선택된 항목이 없습니다.</span>`;
+                return;
+            }
+
+            if (selectedItemIdx !== null) {
+                // Item Selected
+                const item = currentTab.groups[selectedGroupIdx].items[selectedItemIdx];
+                const controlOptions = ensureControlOptions(item);
+                const callbackField = item.type === 'comboBox' ? 'onChange' : 'onAction';
+                const callbackValue = item[callbackField] || item.onAction || '';
+                
+                editor.innerHTML = `
+                    <div class="border-b pb-2 mb-2 font-bold text-gray-700 flex justify-between items-center">
+                        <span>컨트롤 속성 (${item.type})</span>
+                        <span class="text-[11px] bg-gray-200 px-1.5 py-0.5 rounded text-gray-600">${item.id}</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">ID (식별자)</label>
+                            <input type="text" class="w-full p-1.5 border rounded border-gray-300 focus:border-emerald-600 outline-none" value="${item.id}" oninput="updateItemProperty('id', this.value)">
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">레이블 (표시 이름)</label>
+                            <input type="text" class="w-full p-1.5 border rounded border-gray-300 focus:border-emerald-600 outline-none" value="${item.label}" oninput="updateItemProperty('label', this.value)">
+                        </div>
+
+                        ${item.type !== 'separator' ? `
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">아이콘 (imageMso)</label>
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2 p-2 bg-gray-50 border rounded mt-1 cursor-pointer hover:bg-emerald-50 hover:border-emerald-300 transition" onclick="openIconModal()">
+                                    <div class="p-1 bg-white rounded border shadow-2xs">
+                                        ${(iconsList.find(i => i.id === item.imageMso) || iconsList[0]).svg}
+                                    </div>
+                                    <span class="font-mono text-gray-600 text-xs flex-1">${item.imageMso}</span>
+                                    <button class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-[11px] font-bold hover:bg-emerald-200 transition">변경</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">크기 (Size)</label>
+                            <select class="w-full p-1.5 border rounded border-gray-300 focus:border-emerald-600 outline-none" onchange="updateItemProperty('size', this.value)">
+                                <option value="large" ${item.size === 'large' ? 'selected' : ''}>Large (큰 아이콘)</option>
+                                <option value="normal" ${item.size === 'normal' ? 'selected' : ''}>Normal (작은 아이콘)</option>
+                            </select>
+                        </div>
+
+                        ${item.size === 'normal' ? `
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">배치 위치 (Placement)</label>
+                            <select class="w-full p-1.5 border rounded border-gray-300 focus:border-emerald-600 outline-none" onchange="updateItemProperty('placement', this.value)">
+                                <option value="below" ${item.placement !== 'beside' ? 'selected' : ''}>아래에 배치 (기본, 최대 3개)</option>
+                                <option value="beside" ${item.placement === 'beside' ? 'selected' : ''}>새로운 열(옆)에 배치</option>
+                            </select>
+                        </div>
+                        ` : ''}
+
+                        ${(item.type === 'comboBox' || item.type === 'dropDown') ? `
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">항목 수 (Items)</label>
+                            <input type="number" min="1" max="12" class="w-full p-1.5 border rounded border-gray-300 focus:border-emerald-600 outline-none" value="${Math.max(1, parseInt(item.itemCount || 3, 10))}" oninput="updateItemProperty('itemCount', this.value)">
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">항목 목록</label>
+                            <div class="space-y-2">
+                                ${controlOptions.map((option, idx) => `
+                                    <div class="flex gap-2">
+                                        <input type="text" class="w-20 p-1.5 border rounded border-gray-300 outline-none" value="${option.id}" oninput="updateControlOption(${idx}, 'id', this.value)">
+                                        <input type="text" class="flex-1 p-1.5 border rounded border-gray-300 outline-none" value="${option.label}" oninput="updateControlOption(${idx}, 'label', this.value)">
+                                        <button type="button" class="px-2 py-1 rounded bg-red-100 text-red-600 text-xs" onclick="removeControlOption(${idx}); event.stopPropagation();">-</button>
+                                    </div>
+                                `).join('')}
+                                <button type="button" class="px-2 py-1 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold" onclick="addControlOption(); event.stopPropagation();">+ 항목 추가</button>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">VBA 콜백 함수</label>
+                            <input type="text" class="w-full p-1.5 border rounded border-gray-300 focus:border-emerald-600 outline-none font-mono text-blue-700" value="${callbackValue}" oninput="updateItemProperty('${callbackField}', this.value)">
+                            <div class="text-[11px] text-gray-500 mt-1">
+                                ${item.type === 'comboBox' ? '콤보박스는 선택값 변경 시 콜백이 실행됩니다.' : '드롭다운은 선택된 항목 기준으로 콜백이 실행됩니다.'}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else if (selectedGroupIdx !== null) {
+                // Group Selected
+                const grp = currentTab.groups[selectedGroupIdx];
+                editor.innerHTML = `
+                    <div class="border-b pb-2 mb-2 font-bold text-gray-700">그룹 속성</div>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">그룹 ID</label>
+                            <input type="text" class="w-full p-1.5 border rounded border-gray-300 outline-none" value="${grp.id}" oninput="updateGroupProperty('id', this.value)">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">그룹 이름 (Label)</label>
+                            <input type="text" class="w-full p-1.5 border rounded border-gray-300 outline-none" value="${grp.label}" oninput="updateGroupProperty('label', this.value)">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">Normal 아이콘 정렬</label>
+                            <select class="w-full p-1.5 border rounded border-gray-300 outline-none" onchange="updateGroupProperty('normalLayout', this.value)">
+                                <option value="vertical" ${grp.normalLayout !== 'horizontal' ? 'selected' : ''}>세로로 쌓기 (기본, 최대 3개)</option>
+                                <option value="horizontal" ${grp.normalLayout === 'horizontal' ? 'selected' : ''}>가로로 나란히 (수평 배치)</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Tab Selected
+                editor.innerHTML = `
+                    <div class="border-b pb-2 mb-2 font-bold text-gray-700">탭 속성</div>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">탭 ID</label>
+                            <input type="text" class="w-full p-1.5 border rounded border-gray-300 outline-none" value="${currentTab.id}" oninput="updateTabProperty('id', this.value)">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">탭 이름 (Label)</label>
+                            <input type="text" class="w-full p-1.5 border rounded border-gray-300 outline-none" value="${currentTab.label}" oninput="updateTabProperty('label', this.value)">
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function selectTab(tIdx) {
+            selectedTabIdx = tIdx;
+            selectedGroupIdx = null;
+            selectedItemIdx = null;
+            renderTabsHeader();
+            renderLivePreview();
+            renderTree();
+            renderProperties();
+        }
+
+        function selectGroup(tIdx, gIdx) {
+            selectedTabIdx = tIdx;
+            selectedGroupIdx = gIdx;
+            selectedItemIdx = null;
+            renderLivePreview();
+            renderTree();
+            renderProperties();
+        }
+
+        function selectItem(tIdx, gIdx, iIdx) {
+            selectedTabIdx = tIdx;
+            selectedGroupIdx = gIdx;
+            selectedItemIdx = iIdx;
+            renderLivePreview();
+            renderTree();
+            renderProperties();
+        }
+
+        function addTab() {
+            const baseGroup = data.tabs[0]?.groups?.[0];
+            const newGrp = {
+                id: 'Group_' + Date.now().toString().slice(-4),
+                label: '새 그룹',
+                normalLayout: baseGroup?.normalLayout || 'vertical',
+                items: []
+            };
+            const newTab = { id: 'Tab_' + Date.now().toString().slice(-4), label: '새 탭', groups: [newGrp] };
+            data.tabs.push(newTab);
+            selectedTabIdx = data.tabs.length - 1;
+            selectedGroupIdx = 0;
+            selectedItemIdx = null;
+            refreshAll();
+            log('새 탭과 기본 그룹이 추가되었습니다.');
+        }
+
+        function removeTab(tIdx) {
+            data.tabs.splice(tIdx, 1);
+            selectedTabIdx = Math.max(0, data.tabs.length - 1);
+            selectedGroupIdx = null;
+            selectedItemIdx = null;
+            refreshAll();
+            log('탭이 삭제되었습니다.');
+        }
+
+        function addGroup(tIdx) {
+            const baseGroup = data.tabs[tIdx]?.groups?.[0];
+            const newGrp = {
+                id: 'Group_' + Date.now().toString().slice(-4),
+                label: '새 그룹',
+                normalLayout: baseGroup?.normalLayout || 'vertical',
+                items: []
+            };
+            data.tabs[tIdx].groups.push(newGrp);
+            selectedGroupIdx = data.tabs[tIdx].groups.length - 1;
+            selectedItemIdx = null;
+            refreshAll();
+            log('새 그룹이 추가되었습니다.');
+        }
+
+        function removeGroup(tIdx, gIdx) {
+            data.tabs[tIdx].groups.splice(gIdx, 1);
+            selectedGroupIdx = null;
+            selectedItemIdx = null;
+            refreshAll();
+            log('그룹이 삭제되었습니다.');
+        }
+
+        function addItem(tIdx, gIdx, type) {
+            if (!type) return;
+            const callbackName = 'Macro_' + Date.now().toString().slice(-4);
+            const newItem = {
+                id: type + '_' + Date.now().toString().slice(-4),
+                type: type,
+                label: '새 ' + type,
+                size: 'large',
+                imageMso: 'HappyFace',
+                ...(type === 'comboBox' || type === 'dropDown' ? {
+                    itemCount: 3,
+                    items: Array.from({ length: 3 }, (_, idx) => ({
+                        id: `${type}_${idx + 1}`,
+                        label: `항목 ${idx + 1}`
+                    })),
+                    ...(type === 'comboBox' ? { onChange: callbackName } : { onAction: callbackName })
+                } : { onAction: callbackName })
+            };
+            if (type === 'comboBox' || type === 'dropDown') {
+                newItem.onAction = callbackName;
+            }
+            data.tabs[tIdx].groups[gIdx].items.push(newItem);
+            selectedTabIdx = tIdx;
+            selectedGroupIdx = gIdx;
+            selectedItemIdx = data.tabs[tIdx].groups[gIdx].items.length - 1;
+            refreshAll();
+            log(`컨트롤(${type})이 추가되었습니다.`);
+        }
+
+        function removeItem(tIdx, gIdx, iIdx) {
+            data.tabs[tIdx].groups[gIdx].items.splice(iIdx, 1);
+            selectedItemIdx = null;
+            refreshAll();
+            log('컨트롤이 삭제되었습니다.');
+        }
+
+        function updateItemProperty(field, val) {
+            if (selectedItemIdx !== null) {
+                const item = data.tabs[selectedTabIdx].groups[selectedGroupIdx].items[selectedItemIdx];
+                if (field === 'itemCount') {
+                    const count = Math.max(1, parseInt(val, 10) || 1);
+                    item.itemCount = count;
+                    const existing = Array.isArray(item.items) ? item.items : [];
+                    item.items = Array.from({ length: count }, (_, idx) => existing[idx] || {
+                        id: `${item.id || 'item'}_${idx + 1}`,
+                        label: `항목 ${idx + 1}`
+                    });
+                } else {
+                    item[field] = val;
+                }
+                refreshAll(field === 'size' || field === 'placement' || field === 'itemCount');
+            }
+        }
+
+        function updateGroupProperty(field, val) {
+            if (selectedGroupIdx !== null) {
+                data.tabs[selectedTabIdx].groups[selectedGroupIdx][field] = val;
+                refreshAll(false);
+            }
+        }
+
+        function updateTabProperty(field, val) {
+            data.tabs[selectedTabIdx][field] = val;
+            refreshAll(false);
+        }
+
+        function refreshAll(reRenderProperties = true) {
+            renderTabsHeader();
+            renderLivePreview();
+            renderTree();
+            if (reRenderProperties) renderProperties();
+            generateCode();
+        }
+
+        function generateCode() {
+            const scope = document.getElementById('scope-select').value;
+            let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui"${scope === 'global' ? ' onLoad="RibbonLoaded"' : ''}>\n  <ribbon>\n    <tabs>\n`;
+            let vba = `' ==========================================\n' Excel Ribbon Callbacks Module\n' Generated automatically by Ribbon Builder\n' ==========================================\nOption Explicit\n\n`;
+
+            data.tabs.forEach(t => {
+                xml += `      <tab id="${t.id}" label="${t.label}">\n`;
+                t.groups.forEach(g => {
+                    xml += `        <group id="${g.id}" label="${g.label}">\n`;
+                    let hasHorizontalBox = g.normalLayout === 'horizontal';
+                    if (hasHorizontalBox) {
+                        xml += `          <box id="${g.id}_box" boxStyle="horizontal">\n`;
+                    }
+                    g.items.forEach(it => {
+                        let indent = hasHorizontalBox ? '            ' : '          ';
+                        if (it.type === 'separator') {
+                            xml += `${indent}<separator id="${escapeXml(it.id)}" />\n`;
+                        } else {
+                            const callbackName = it.type === 'comboBox' ? (it.onChange || it.onAction || '') : (it.onAction || '');
+                            if (it.type === 'comboBox' || it.type === 'dropDown') {
+                                const options = ensureControlOptions(it);
+                                xml += `${indent}<${it.type} id="${escapeXml(it.id)}" label="${escapeXml(it.label)}" imageMso="${escapeXml(it.imageMso)}" size="${escapeXml(it.size || 'large')}" ${it.type === 'comboBox' ? `onChange="${escapeXml(callbackName)}"` : `onAction="${escapeXml(callbackName)}"`} >\n`;
+                                options.forEach(option => {
+                                    xml += `${indent}  <item id="${escapeXml(option.id)}" label="${escapeXml(option.label)}" />\n`;
+                                });
+                                xml += `${indent}</${it.type}>\n`;
+                            } else {
+                                xml += `${indent}<${it.type} id="${escapeXml(it.id)}" label="${escapeXml(it.label)}" imageMso="${escapeXml(it.imageMso)}" size="${escapeXml(it.size || 'large')}" onAction="${escapeXml(it.onAction)}" />\n`;
+                            }
+
+                            if (callbackName) {
+                                if (it.type === 'comboBox') {
+                                    vba += `' Callback for ${escapeVbaString(it.id)} (${escapeVbaString(it.label)})\nPublic Sub ${callbackName}(control As IRibbonControl, ByVal text As String)\n    MsgBox "${escapeVbaString(it.label)} 선택됨: " & text, vbInformation, "Ribbon Action"\nEnd Sub\n\n`;
+                                } else if (it.type === 'dropDown') {
+                                    vba += `' Callback for ${escapeVbaString(it.id)} (${escapeVbaString(it.label)})\nPublic Sub ${callbackName}(control As IRibbonControl, ByVal selectedId As String, ByVal selectedIndex As Integer)\n    MsgBox "${escapeVbaString(it.label)} 선택됨: " & selectedId, vbInformation, "Ribbon Action"\nEnd Sub\n\n`;
+                                } else {
+                                    vba += `' Callback for ${escapeVbaString(it.id)} (${escapeVbaString(it.label)})\nPublic Sub ${it.onAction}(control As IRibbonControl)\n    MsgBox "${escapeVbaString(it.label)} 클릭됨!", vbInformation, "Ribbon Action"\nEnd Sub\n\n`;
+                                }
+                            }
+                        }
+                    });
+                    if (hasHorizontalBox) {
+                        xml += `          </box>\n`;
+                    }
+                    xml += `        </group>\n`;
+                });
+                xml += `      </tab>\n`;
+            });
+
+            xml += `    </tabs>\n  </ribbon>\n</customUI>`;
+
+            document.getElementById('xml-output').value = xml;
+            document.getElementById('vba-output').value = vba;
+        }
+
+        function switchCodeTab(tab) {
+            activeCodeTab = tab;
+            const xmlArea = document.getElementById('xml-output');
+            const vbaArea = document.getElementById('vba-output');
+            const btnXml = document.getElementById('btn-show-xml');
+            const btnVba = document.getElementById('btn-show-vba');
+
+            if (tab === 'xml') {
+                xmlArea.classList.remove('hidden');
+                vbaArea.classList.add('hidden');
+                btnXml.className = "px-3 py-1 rounded bg-emerald-600 font-bold text-sm text-white";
+                btnVba.className = "px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 font-bold text-sm text-gray-300";
+                log('Code View: customUI.xml');
+            } else {
+                xmlArea.classList.add('hidden');
+                vbaArea.classList.remove('hidden');
+                btnXml.className = "px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 font-bold text-sm text-gray-300";
+                btnVba.className = "px-3 py-1 rounded bg-emerald-600 font-bold text-sm text-white";
+                log('Code View: VBA Callbacks Module');
+            }
+        }
+
+        function updateScope() {
+            generateCode();
+            log('적용 범위 설정이 변경되었습니다.');
+        }
+
+        function copyCode() {
+            const activeElem = activeCodeTab === 'xml' ? document.getElementById('xml-output') : document.getElementById('vba-output');
+            activeElem.select();
+            document.execCommand('copy');
+            log(`${activeCodeTab.toUpperCase()} 코드가 클립보드에 복사되었습니다.`);
+        }
+
+        function downloadCurrentCode() {
+            if (activeCodeTab === 'xml') {
+                downloadFile('customUI.xml', 'xml-output');
+            } else {
+                downloadFile('RibbonCallbacks.bas', 'vba-output');
+            }
+        }
+
+        function downloadAll() {
+            downloadFile('customUI.xml', 'xml-output');
+            setTimeout(() => downloadFile('RibbonCallbacks.bas', 'vba-output'), 300);
+            log('전체 파일(XML, VBA 모듈) 다운로드가 시작되었습니다.');
+        }
+
+        function downloadFile(filename, elementId) {
+            const content = document.getElementById(elementId).value;
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function openIconModal() {
+            const grid = document.getElementById('icon-modal-grid');
+            grid.innerHTML = iconsList.map(ic => `
+                <button onclick="selectIconFromModal('${ic.id}')" class="flex flex-col items-center justify-center p-3 rounded border border-gray-200 hover:bg-emerald-50 hover:border-emerald-400 transition group bg-white shadow-sm">
+                    <div class="mb-2 group-hover:scale-110 transition-transform">${ic.svg}</div>
+                    <span class="text-[11px] text-gray-600 text-center truncate w-full font-medium" title="${ic.name}">${ic.name.split(' ')[0]}</span>
+                </button>
+            `).join('');
+            document.getElementById('icon-modal').classList.remove('hidden');
+        }
+
+        function closeIconModal() {
+            document.getElementById('icon-modal').classList.add('hidden');
+        }
+
+        function selectIconFromModal(iconId) {
+            updateItemProperty('imageMso', iconId);
+            renderProperties();
+            closeIconModal();
+        }
+
+        // Initialize application on load
+        window.onload = init;
+    </script>
+</body>
+</html>

@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 사진첩 관리 시스템 Pro</title>
+    <!-- Tailwind CSS 및 Lucide 아이콘 CDN 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            light: '#4f46e5',
+                            dark: '#818cf8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            grid-template-rows: auto repeat(6, minmax(0, 1fr));
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        /* 극장식 커튼 효과용 CSS 추가 */
+        .curtain-panel {
+            background-color: #0c0f17;
+            box-shadow: 0 0 40px rgba(0,0,0,0.9);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col overflow-hidden bg-slate-50 text-slate-800 transition-colors duration-200 dark:bg-slate-900 dark:text-slate-100">
+
+    <!-- 1. 상단 탑 메뉴 바 -->
+    <header id="top-header" class="bg-slate-800 text-slate-200 text-xs px-4 py-2 flex justify-between items-center select-none border-b border-slate-700 z-50">
+        <div class="flex gap-6 items-center">
+            <span class="font-bold text-sm text-indigo-400 flex items-center gap-1 cursor-pointer" onclick="resetFilters()">
+                <i data-lucide="aperture" class="w-4 h-4"></i> PhotoManager Pro
+            </span>
+            <!-- 파일 메뉴 -->
+            <div class="relative dropdown-container">
+                <button onclick="toggleDropdown(event, 'file-menu')" class="hover:text-white px-2 py-0.5 rounded cursor-pointer focus:outline-none flex items-center gap-1 font-medium">
+                    파일(F) <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                </button>
+                <div id="file-menu" class="absolute left-0 mt-1.5 w-44 bg-slate-800 border border-slate-700 rounded shadow-lg hidden z-50">
+                    <button onclick="connectLocalFolder()" class="w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2 text-indigo-300">
+                        <i data-lucide="folder-git" class="w-3.5 h-3.5 text-indigo-400"></i> PC 폴더 실시간 연결
+                    </button>
+                    <button onclick="triggerImport()" class="w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2">
+                        <i data-lucide="upload" class="w-3.5 h-3.5 text-indigo-400"></i> 사진 가져오기
+                    </button>
+                    <hr class="border-slate-700">
+                    <button onclick="openConfirmDialog('프로그램을 초기화하시겠습니까? 모든 임시 데이터가 리셋됩니다.', clearAllData)" class="w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2 text-red-400">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 전체 데이터 초기화
+                    </button>
+                </div>
+            </div>
+            <!-- 보기 메뉴 -->
+            <div class="relative dropdown-container">
+                <button onclick="toggleDropdown(event, 'view-menu')" class="hover:text-white px-2 py-0.5 rounded cursor-pointer focus:outline-none flex items-center gap-1 font-medium">
+                    보기(V) <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                </button>
+                <div id="view-menu" class="absolute left-0 mt-1.5 w-48 bg-slate-800 border border-slate-700 rounded shadow-lg hidden z-50">
+                    <button onclick="resetFilters()" class="w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2">
+                        <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-emerald-400"></i> 전체보기
+                    </button>
+                    <button onclick="changeViewMode(1)" class="w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2">
+                        <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-400"></i> 1장 보기 <span id="menu-view1-check" class="ml-auto text-[10px] text-indigo-400">✓</span>
+                    </button>
+                    <button onclick="changeViewMode(2)" class="w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2">
+                        <i data-lucide="images" class="w-3.5 h-3.5 text-indigo-400"></i> 2장 보기 <span id="menu-view2-check" class="ml-auto text-[10px] text-indigo-400 hidden">✓</span>
+                    </button>
+                    <hr class="border-slate-700">
+                    <button onclick="setTheme('light')" class="w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2">
+                        <i data-lucide="sun" class="w-3.5 h-3.5 text-yellow-400"></i> 라이트 모드 <span id="menu-light-check" class="ml-auto text-[10px] text-yellow-400">✓</span>
+                    </button>
+                    <button onclick="setTheme('dark')" class="w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2">
+                        <i data-lucide="moon" class="w-3.5 h-3.5 text-indigo-300"></i> 다크 모드 <span id="menu-dark-check" class="ml-auto text-[10px] text-indigo-300 hidden">✓</span>
+                    </button>
+                    <button onclick="toggleBrowserFullscreen()" class="w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2">
+                        <i data-lucide="expand" class="w-3.5 h-3.5 text-teal-400"></i> 전체화면 보기 <span id="menu-fullscreen-check" class="ml-auto text-[10px] text-teal-400 hidden">✓</span>
+                    </button>
+                    <hr class="border-slate-700">
+                    <button onclick="togglePhotoOnly()" class="w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2">
+                        <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-purple-400"></i> <span id="menu-photo-only-text">사진만 보기(전체화면)</span> <span id="menu-photo-only-check" class="ml-auto text-[10px] text-purple-400 hidden">✓</span>
+                    </button>
+                    <button onclick="startSlideshow()" class="w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2">
+                        <i data-lucide="play" class="w-3.5 h-3.5 text-pink-400"></i> 슬라이드 쇼 <span id="menu-slideshow-check" class="ml-auto text-[10px] text-pink-400 hidden">✓</span>
+                    </button>
+                </div>
+            </div>
+            <!-- 도움말 메뉴 -->
+            <div class="relative dropdown-container">
+                <button onclick="toggleDropdown(event, 'help-menu')" class="hover:text-white px-2 py-0.5 rounded cursor-pointer focus:outline-none flex items-center gap-1 font-medium">
+                    도움말(H) <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                </button>
+                <div id="help-menu" class="absolute left-0 mt-1.5 w-44 bg-slate-800 border border-slate-700 rounded shadow-lg hidden z-50">
+                    <button onclick="showInfoModal()" class="w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2">
+                        <i data-lucide="info" class="w-3.5 h-3.5"></i> 프로그램 정보
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="text-[10px] text-slate-400 font-medium">설정 및 메타데이터 자동 동기화 가동 중</div>
+    </header>
+
+    <!-- 1-2. 리본 메뉴 바 -->
+    <section id="ribbon-bar" class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-1.5 flex items-center justify-start gap-4 shadow-sm z-40 transition-all duration-200">
+        <!-- 보기 설정 그룹 -->
+        <div class="flex items-center gap-1 border-r border-slate-200 dark:border-slate-700 pr-4">
+            <button id="ribbon-view-1" onclick="changeViewMode(1)" class="flex flex-col items-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition w-16" title="1장 보기">
+                <i data-lucide="image" class="w-4 h-4 text-indigo-500 dark:text-indigo-400"></i>
+                <span class="text-[10px] mt-0.5 font-medium">1장 보기</span>
+            </button>
+            <button id="ribbon-view-2" onclick="changeViewMode(2)" class="flex flex-col items-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition w-16" title="2장 보기">
+                <i data-lucide="images" class="w-4 h-4 text-indigo-500 dark:text-indigo-400"></i>
+                <span class="text-[10px] mt-0.5 font-medium">2장 보기</span>
+            </button>
+            <button id="ribbon-view-all" onclick="resetFilters()" class="flex flex-col items-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition w-16" title="전체 목록 보기">
+                <i data-lucide="layout-grid" class="w-4 h-4 text-emerald-500 dark:text-emerald-400"></i>
+                <span class="text-[10px] mt-0.5 font-medium">전체보기</span>
+            </button>
+        </div>
+
+        <!-- 테마 및 화면 제어 그룹 -->
+        <div class="flex items-center gap-1 border-r border-slate-200 dark:border-slate-700 pr-4">
+            <button id="ribbon-theme-light" onclick="setTheme('light')" class="flex flex-col items-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition w-16" title="라이트 모드">
+                <i data-lucide="sun" class="w-4 h-4 text-amber-500"></i>
+                <span class="text-[10px] mt-0.5 font-medium">라이트</span>
+            </button>
+            <button id="ribbon-theme-dark" onclick="setTheme('dark')" class="flex flex-col items-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition w-16" title="다크 모드">
+                <i data-lucide="moon" class="w-4 h-4 text-indigo-400"></i>
+                <span class="text-[10px] mt-0.5 font-medium">다크</span>
+            </button>
+            <button id="ribbon-fullscreen" onclick="toggleBrowserFullscreen()" class="flex flex-col items-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition w-16" title="모니터 화면 전체 채우기">
+                <i data-lucide="expand" class="w-4 h-4 text-teal-500"></i>
+                <span class="text-[10px] mt-0.5 font-medium">전체화면</span>
+            </button>
+        </div>
+
+        <!-- 작업 및 슬라이드 쇼 그룹 -->
+        <div class="flex items-center gap-1">
+            <button onclick="connectLocalFolder()" class="flex flex-col items-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition w-20" title="PC의 로컬 폴더 직접 연동 및 관리">
+                <i data-lucide="folder-git" class="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-pulse"></i>
+                <span class="text-[10px] mt-0.5 font-bold text-indigo-600 dark:text-indigo-400">폴더 연결</span>
+            </button>
+            <button onclick="triggerImport()" class="flex flex-col items-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition w-16" title="로컬 사진 가져오기">
+                <i data-lucide="folder-plus" class="w-4 h-4 text-blue-500 dark:text-blue-400"></i>
+                <span class="text-[10px] mt-0.5 font-medium">가져오기</span>
+            </button>
+            <button id="ribbon-photo-only" onclick="togglePhotoOnly()" class="flex flex-col items-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition w-24" title="군더더기 없는 사진만 보기 모드">
+                <i data-lucide="maximize-2" class="w-4 h-4 text-purple-500"></i>
+                <span class="text-[10px] mt-0.5 font-medium">사진만 보기</span>
+            </button>
+            <button id="ribbon-slideshow" onclick="startSlideshow()" class="flex flex-col items-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition w-20" title="슬라이드 쇼 시작">
+                <i data-lucide="play" class="w-4 h-4 text-pink-500"></i>
+                <span class="text-[10px] mt-0.5 font-medium">슬라이드 쇼</span>
+            </button>
+        </div>
+
+        <!-- 숨겨진 파일 인풋 -->
+        <input type="file" id="photo-import-input" accept="image/*" class="hidden" onchange="handlePhotoImport(event)">
+    </section>
+
+    <!-- 3단 구성 메인 컨테이너 -->
+    <main class="flex-1 flex overflow-hidden relative">
+        
+        <!-- 좌측: 달력 패널 -->
+        <aside id="sidebar-left" class="w-72 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col select-none transition-all duration-200 flex-shrink-0">
+            <!-- 달력 컨트롤 헤더 -->
+            <div class="p-2 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center gap-1">
+                <button onclick="changeMonth(-1)" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition text-slate-600 dark:text-slate-300" title="이전 달">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+                <h3 id="calendar-month-year" class="font-bold text-xs text-slate-800 dark:text-slate-200">2026년 07월</h3>
+                <button onclick="changeMonth(1)" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition text-slate-600 dark:text-slate-300" title="다음 달">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+                <!-- 오늘 선택 버튼 -->
+                <button onclick="goToday()" class="ml-2 px-2 py-1 bg-indigo-50 dark:bg-indigo-950/80 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] rounded transition flex items-center gap-0.5">
+                    <i data-lucide="calendar-check" class="w-3 h-3"></i> 오늘
+                </button>
+            </div>
+            <!-- 달력 영역 -->
+            <div class="px-2 pt-1 flex-shrink-0">
+                <div class="calendar-grid w-full text-center text-[10px]" id="calendar-days">
+                    <!-- JS에 의해 7열 x 6단 격자로 렌더링됨 -->
+                </div>
+            </div>
+
+            <!-- PC 폴더 동기화 상태 알림 위젯 -->
+            <div id="folder-status-card" class="mx-2 mt-2 p-2.5 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-100/60 dark:border-indigo-900/30 hidden">
+                <div class="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 font-bold text-[11px] mb-1">
+                    <i data-lucide="folder-check" class="w-3.5 h-3.5"></i>
+                    <span>PC 폴더 연동 상태</span>
+                </div>
+                <p id="folder-status-text" class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed mb-2">
+                    보안을 위해 PC 폴더 권한 확인을 거쳐 실시간 연동을 재개합니다.
+                </p>
+                <button id="folder-auth-btn" class="w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-[10px] rounded-lg transition flex items-center justify-center gap-1 shadow-sm">
+                    <i data-lucide="shield-check" class="w-3 h-3"></i> 권한 승인 및 동기화
+                </button>
+            </div>
+
+            <!-- 국경일 및 기념일 정보 하단 위젯 -->
+            <div class="mt-1.5 mx-2 mb-2 p-2.5 bg-rose-50 dark:bg-rose-950/30 rounded-xl border border-rose-100/60 dark:border-rose-900/20 flex-1 flex flex-col overflow-hidden">
+                <div class="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-bold text-[11px] mb-1.5 flex-shrink-0">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 animate-pulse"></i>
+                    <span>기념일 및 날짜 정보</span>
+                </div>
+                <div id="holiday-widget-content" class="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed overflow-y-auto pr-1">
+                    달력의 날짜나 공휴일을 마우스로 선택해 보세요. 해당 날짜에 숨겨진 역사적 유래와 세부 정보를 바로 이곳에 요약해 드립니다.
+                </div>
+            </div>
+        </aside>
+
+        <!-- 중앙: 사진 보기 영역 -->
+        <section id="center-viewer-section" class="flex-1 bg-slate-100 dark:bg-slate-900 p-4 flex flex-col justify-between items-center overflow-hidden transition-all duration-300 relative">
+            
+            <!-- 부유형 전체화면 해제 안내 -->
+            <button id="floating-exit-photo-only" onclick="togglePhotoOnly()" class="hidden absolute top-4 right-4 bg-slate-900/85 hover:bg-slate-800 text-white border border-slate-700/50 px-3 py-1.5 rounded-xl shadow-2xl transition z-50 text-xs flex items-center gap-1.5">
+                <i data-lucide="minimize-2" class="w-3.5 h-3.5"></i> 일반 화면 복원
+            </button>
+
+            <!-- 상단 바 및 개수 타이틀 -->
+            <div id="center-viewer-header" class="w-full max-w-5xl flex justify-between items-center mb-2 flex-shrink-0 transition-all duration-300">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-sm font-bold text-slate-800 dark:text-indigo-300" id="current-view-title">모든 사진</h2>
+                    <span id="photo-count-badge" class="bg-indigo-100 text-indigo-700 text-[10px] font-semibold px-2 py-0.5 rounded-full dark:bg-indigo-950/80 dark:text-indigo-300">0장</span>
+                </div>
+                <!-- 필터 해제 바 -->
+                <div id="filter-active-bar" class="hidden flex items-center gap-2 bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[11px] px-2.5 py-0.5 rounded-lg">
+                    <span id="filter-active-text">날짜 필터 적용 중</span>
+                    <button onclick="resetFilters()" class="hover:text-red-500 font-bold ml-1">✕ 해제</button>
+                </div>
+            </div>
+
+            <!-- 사진 뷰어 프레임 -->
+            <div id="photo-viewer-grid" class="flex-1 w-full max-w-5xl flex items-center justify-center overflow-hidden gap-4 transition-all duration-300 my-auto">
+                <!-- JS에 의해 1장 혹은 2장 보기 모드로 사진을 꽉 채워 렌더링 -->
+            </div>
+
+            <!-- 사진 정보 요약 바 및 편집 모달 오픈 링크 -->
+            <div id="current-photo-info-bar" class="w-full max-w-5xl mt-2 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-between gap-4 flex-shrink-0 text-xs transition-all duration-300">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span id="summary-title" class="font-bold text-slate-800 dark:text-indigo-300 truncate">로딩 중...</span>
+                        <span id="summary-date" class="text-[10px] text-slate-400 dark:text-slate-500 flex-shrink-0"></span>
+                    </div>
+                    <p id="summary-desc" class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">설명이 여기에 나타납니다.</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <span id="summary-tags" class="hidden sm:inline-block text-[10px] bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 px-2 py-1 rounded"></span>
+                    
+                    <button onclick="deleteCurrentPhoto()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-semibold flex items-center gap-1 transition">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i> 삭제
+                    </button>
+
+                    <button onclick="openEditModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-semibold flex items-center gap-1 transition">
+                        <i data-lucide="edit-3" class="w-3 h-3"></i> 정보 수정
+                    </button>
+                </div>
+            </div>
+
+            <!-- 사진 전환 하단 네비게이션 컨트롤 바 -->
+            <div id="center-viewer-footer" class="w-full max-w-5xl flex items-center justify-center gap-4 mt-2 mb-1 flex-shrink-0 transition-all duration-300">
+                <button onclick="navigatePhoto(-1)" class="px-3 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 shadow-sm transition">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i> 이전 사진
+                </button>
+                <span id="photo-navigation-indicator" class="text-xs font-mono font-bold text-slate-600 dark:text-slate-300">0 / 0</span>
+                <button onclick="navigatePhoto(1)" class="px-3 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 shadow-sm transition">
+                    다음 사진 <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- 우측: 검색 및 제어 패널 -->
+        <aside id="sidebar-right" class="w-72 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 p-4 flex flex-col gap-4 select-none transition-all duration-200 flex-shrink-0">
+            <div>
+                <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
+                    <i data-lucide="search" class="w-4 h-4 text-indigo-500"></i> 메타 정보 검색
+                </h3>
+                <div class="relative">
+                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="제목, 메모, 태그 또는 일자 입력..." 
+                           class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg py-2 pl-3 pr-10 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <span class="absolute right-3 top-2.5 text-slate-400">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                </div>
+            </div>
+
+            <hr class="border-slate-100 dark:border-slate-700">
+
+            <!-- 검색 도우미 가이드 -->
+            <div class="flex-1 flex flex-col justify-start">
+                <span class="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase mb-2 tracking-wider">검색 도우미</span>
+                <div class="text-xs text-slate-500 dark:text-slate-400 space-y-2.5 leading-relaxed">
+                    <p>📸 <strong>실시간 통합 매핑:</strong></p>
+                    <p class="pl-2 text-[11px] text-slate-400 dark:text-slate-500">등록된 각 사진 아래의 [정보 수정] 창에서 타이핑한 제목, 상세 메모 내용 및 검색용 태그 정보를 기반으로 즉각 탐색합니다.</p>
+                    <p>💡 <strong>태그 작성 권장:</strong></p>
+                    <p class="pl-2 text-[11px] text-slate-400 dark:text-slate-500">쉼표(,)를 기준으로 그룹화된 연관 검색 태그를 달아두면 대량의 앨범에서 빠르고 원활한 필터링이 가능합니다.</p>
+                </div>
+            </div>
+            
+            <hr class="border-slate-100 dark:border-slate-700">
+            
+            <!-- 리셋 버튼 -->
+            <button onclick="openConfirmDialog('주의: 업로드한 모든 신규 사진 데이터 및 사용자 정의 텍스트가 삭제되고 초기 데모 데이터로 되돌아갑니다. 초기화하시겠습니까?', clearAllData)" 
+                    class="w-full py-2 border border-red-200 text-red-500 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-medium rounded-lg transition flex items-center justify-center gap-1.5">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 초기 리셋 (기본 데이터 복구)
+            </button>
+        </aside>
+
+    </main>
+
+    <!-- 2. 하단 로그 정보 바 -->
+    <footer id="top-footer" class="bg-slate-100 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 px-4 py-1.5 text-xs text-slate-500 dark:text-slate-400 flex justify-between items-center select-none z-50">
+        <div class="flex items-center gap-2 overflow-hidden w-4/5">
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300">LOG</span>
+            <span id="system-log-text" class="truncate">스마트 사진첩 관리 시스템이 완벽하게 초기화되었습니다.</span>
+        </div>
+        <div class="text-[10px] text-slate-400 font-mono" id="current-system-time">2026-07-11 13:00:00</div>
+    </footer>
+
+    <!-- 커스텀 얼럿/컨펌 통합 대화창 모달 -->
+    <div id="custom-dialog-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center hidden opacity-0 transition-all duration-200">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm p-5 border border-slate-100 dark:border-slate-700 shadow-2xl relative transform scale-95 transition-all duration-200">
+            <h3 id="custom-dialog-title" class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-4 h-4 text-indigo-500"></i> 안내 및 알림
+            </h3>
+            <p id="custom-dialog-message" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-5">메시지 내용</p>
+            <div class="flex justify-end gap-2 text-xs font-semibold">
+                <button id="custom-dialog-cancel" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition hidden">취소</button>
+                <button id="custom-dialog-ok" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 토스트 메시지 안내 바 -->
+    <div id="custom-toast" class="fixed bottom-12 left-1/2 transform -translate-x-1/2 bg-slate-800 text-slate-100 text-xs py-2 px-4 rounded-xl shadow-lg z-[120] pointer-events-none transition-all duration-300 opacity-0 translate-y-2 flex items-center gap-1.5">
+        <i data-lucide="info" class="w-3.5 h-3.5 text-indigo-400"></i>
+        <span id="custom-toast-text">안내사항 출력</span>
+    </div>
+
+    <!-- 프로그램 정보 모달 -->
+    <div id="info-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md p-6 border border-slate-100 dark:border-slate-700 shadow-2xl relative">
+            <button onclick="closeInfoModal()" class="absolute right-4 top-4 hover:bg-slate-100 dark:hover:bg-slate-700 p-1.5 rounded-lg text-slate-400 dark:text-slate-500">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-3 flex items-center gap-2">
+                <i data-lucide="aperture" class="w-5 h-5 text-indigo-500"></i> PhotoManager Pro v3.0
+            </h3>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                본 프로그램은 마우스 오작동이 없는 안정적인 윈도우 스타일 메뉴바와 고정 6단 미니 달력, 그리고 사진 정보 실시간 검색 및 사진만 감상하는 창 최적화 모드를 갖춘 고품질 앨범 통합 매니저입니다.
+            </p>
+            <div class="flex justify-end">
+                <button onclick="closeInfoModal()" class="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition">시작하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 사진 편집 모달 -->
+    <div id="edit-photo-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md p-6 border border-slate-100 dark:border-slate-700 shadow-2xl relative">
+            <button onclick="closeEditModal()" class="absolute right-4 top-4 hover:bg-slate-100 dark:hover:bg-slate-700 p-1.5 rounded-lg text-slate-400 dark:text-slate-500">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+                <i data-lucide="edit" class="w-5 h-5 text-indigo-500"></i> 사진 상세정보 수정
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">사진 제목</label>
+                    <input type="text" id="modal-edit-title" class="w-full bg-slate-50 dark:bg-slate-700 text-xs border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">등록 날짜</label>
+                    <input type="date" id="modal-edit-date" class="w-full bg-slate-50 dark:bg-slate-700 text-xs border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">사진 메모 및 상세 정보</label>
+                    <textarea id="modal-edit-desc" rows="3" class="w-full bg-slate-50 dark:bg-slate-700 text-xs border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100 resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">태그 (쉼표로 구분)</label>
+                    <input type="text" id="modal-edit-tags" class="w-full bg-slate-50 dark:bg-slate-700 text-xs border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition">취소</button>
+                <button onclick="saveModalPhotoInfo()" class="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 슬라이드쇼 뷰어 모달 (마우스 이동 시에만 UI 활성화 연동) -->
+    <div id="slideshow-overlay" onmousemove="showSlideshowUI(event)" class="fixed inset-0 bg-black z-[105] flex items-center justify-center select-none hidden opacity-0 transition-all duration-300">
+        <!-- 연출용 좌우 분할 커튼 패널 -->
+        <div id="curtain-left" class="absolute left-0 top-0 w-1/2 h-full curtain-panel z-10 transition-transform duration-500 ease-in-out -translate-x-full"></div>
+        <div id="curtain-right" class="absolute right-0 top-0 w-1/2 h-full curtain-panel z-10 transition-transform duration-500 ease-in-out translate-x-full"></div>
+
+        <img id="slideshow-img" src="" alt="slide" class="absolute inset-0 w-full h-full object-contain select-none transition-all duration-500">
+
+        <div class="slideshow-ui-el transition-opacity duration-300 absolute top-6 left-6 right-6 flex justify-between items-center text-white/90 z-20">
+            <div class="flex items-center gap-2 bg-slate-900/60 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-slate-700/50">
+                <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-pink-500 text-white animate-pulse">SLIDESHOW</span>
+                <h4 id="slideshow-title" class="font-bold text-sm">슬라이드 사진</h4>
+            </div>
+            <button onclick="stopSlideshow()" class="bg-slate-900/60 backdrop-blur-md hover:bg-slate-800 border border-slate-700/50 p-2 rounded-full transition text-slate-400 hover:text-white" title="슬라이드 쇼 종료">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <button onclick="navigateSlide(-1); showSlideshowUI(event);" class="slideshow-ui-el transition-opacity duration-300 absolute left-6 bg-slate-900/60 backdrop-blur-md hover:bg-slate-800 border border-slate-700/50 p-3.5 rounded-full text-white transition z-20 hover:scale-105">
+            <i data-lucide="chevron-left" class="w-6 h-6"></i>
+        </button>
+
+        <button onclick="navigateSlide(1); showSlideshowUI(event);" class="slideshow-ui-el transition-opacity duration-300 absolute right-6 bg-slate-900/60 backdrop-blur-md hover:bg-slate-800 border border-slate-700/50 p-3.5 rounded-full text-white transition z-20 hover:scale-105">
+            <i data-lucide="chevron-right" class="w-6 h-6"></i>
+        </button>
+
+        <div class="slideshow-ui-el transition-opacity duration-300 absolute bottom-6 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-3 z-20 w-full max-w-2xl px-4">
+            <div class="bg-slate-950/90 backdrop-blur-md px-5 py-2.5 rounded-xl text-center w-full border border-slate-800 shadow-2xl">
+                <p id="slideshow-desc" class="text-xs text-slate-300 leading-relaxed font-medium"></p>
+            </div>
+            
+            <div class="bg-slate-950/90 backdrop-blur-md px-5 py-2 rounded-full flex items-center gap-4 border border-slate-800 shadow-2xl text-[10px] text-slate-400">
+                <button onclick="toggleSlidePlay()" id="slideshow-play-btn" class="bg-indigo-600 hover:bg-indigo-50 p-2.5 rounded-full text-white shadow-lg transition">
+                    <i data-lucide="pause" class="w-4 h-4"></i>
+                </button>
+                <span id="slideshow-indicator" class="text-xs font-mono text-slate-400">0 / 0</span>
+                <div class="h-4 w-px bg-slate-800"></div>
+                <div class="flex items-center gap-2">
+                    <span>간격:</span>
+                    <select id="slideshow-speed" onchange="changeSlideshowSpeed()" class="bg-slate-900 text-slate-200 border border-slate-800 rounded px-2 py-0.5 text-[10px] outline-none">
+                        <option value="2000">2초</option>
+                        <option value="3000" selected>3초</option>
+                        <option value="5000">5초</option>
+                        <option value="8000">8초</option>
+                    </select>
+                </div>
+                <div class="h-4 w-px bg-slate-800"></div>
+                <div class="flex items-center gap-2">
+                    <span>효과:</span>
+                    <select id="slideshow-effect" class="bg-slate-900 text-slate-200 border border-slate-800 rounded px-2 py-0.5 text-[10px] outline-none">
+                        <option value="fade" selected>페이드 앤 줌</option>
+                        <option value="curtain">클래식 커튼 열기</option>
+                        <option value="slide-left">좌에서 우로 밀기</option>
+                        <option value="slide-right">우에서 좌로 밀기</option>
+                        <option value="slide-down">위에서 아래로 밀기</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 스크립트 비즈니스 로직 작성 -->
+    <script>
+        // IndexedDB 데이터베이스 오픈 함수 (PC연결 오류 해결을 위해 구현)
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('SmartPhotoManagerDB', 1);
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('settings')) {
+                        db.createObjectStore('settings');
+                    }
+                };
+                
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+                
+                request.onerror = (event) => {
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        function deleteCurrentPhoto() {
+            let filtered = [...state.photos];
+            if (state.filterDate) {
+                filtered = filtered.filter(p => p.date === state.filterDate);
+            }
+            if (state.searchQuery) {
+                const q = state.searchQuery.toLowerCase();
+                filtered = filtered.filter(p => p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.tags.toLowerCase().includes(q));
+            }
+
+            if (filtered.length === 0) return;
+
+            const photoToDelete = filtered[state.currentPhotoIndex];
+            
+            openConfirmDialog(`"${photoToDelete.title}" 사진을 정말 삭제하시겠습니까?`, () => {
+                state.photos = state.photos.filter(p => p.id !== photoToDelete.id);
+                
+                if (state.currentPhotoIndex >= state.photos.length) {
+                    state.currentPhotoIndex = Math.max(0, state.photos.length - 1);
+                }
+                
+                saveState();
+                renderCalendar();
+                renderPhotos();
+                showToast("사진이 삭제되었습니다.");
+                writeLog("사진 데이터 삭제 완료 및 앨범 갱신.");
+            });
+        }
+
+        function getSetting(key) {
+            return openDB().then(db => {
+                return new Promise((resolve) => {
+                    const tx = db.transaction('settings', 'readonly');
+                    const store = tx.objectStore('settings');
+                    const req = store.get(key);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => resolve(null);
+                });
+            });
+        }
+
+        function setSetting(key, val) {
+            return openDB().then(db => {
+                return new Promise((resolve) => {
+                    const tx = db.transaction('settings', 'readwrite');
+                    const store = tx.objectStore('settings');
+                    const req = store.put(val, key);
+                    req.onsuccess = () => resolve(true);
+                    req.onerror = () => resolve(false);
+                });
+            });
+        }
+
+        function deleteSetting(key) {
+            return openDB().then(db => {
+                return new Promise((resolve) => {
+                    const tx = db.transaction('settings', 'readwrite');
+                    const store = tx.objectStore('settings');
+                    const req = store.delete(key);
+                    req.onsuccess = () => resolve(true);
+                    req.onerror = () => resolve(false);
+                });
+            });
+        }
+
+        const HOLIDAYS_DB = {
+            '01-01': { name: '신정', desc: '한 해의 첫째 날로, 새로운 시작을 기원하는 전통적인 명절입니다.' },
+            '03-01': { name: '3·1절', desc: '1919년 3월 1일 일본의 한민족 말살 정책에 항거하여 독립선언서를 발표한 숭고한 국경일입니다.' },
+            '05-05': { name: '어린이날', desc: '어린이들이 씩씩하고 올바르게 자라나도록 사랑과 격려를 실천하는 날입니다.' },
+            '06-06': { name: '현충일', desc: '국토방위에 목숨을 바친 순국선열과 전몰장병들의 숭고한 호국 정신을 기리는 뜻깊은 날입니다.' },
+            '07-17': { name: '제헌절', desc: '1948년 7월 17일, 대한민국 민주주의의 기틀이 되는 대한민국 제헌 국법을 공포한 역사적인 날입니다.' },
+            '08-15': { name: '광복절', desc: '1945년 8월 15일 일제의 식민통치로부터 해방된 빛나는 자주독립 광복을 기념하는 날입니다.' },
+            '10-03': { name: '개천절', desc: '기원전 2333년, 한민족 최초의 국가인 고조선을 건국하여 민족사의 기원을 연 건국 기념일입니다.' },
+            '10-09': { name: '한글날', desc: '세종대왕의 백성을 향한 한글 창제(훈민정음 반포)의 숭고한 업적을 기리고 우수성을 선양하는 날입니다.' },
+            '12-25': { name: '성탄절', desc: '예수 그리스도의 탄생을 축하하며 전 인류의 평화와 안녕을 나누는 평화로운 날입니다.' }
+        };
+
+        const DEFAULT_PHOTOS = [
+            {
+                id: 'demo_1',
+                url: 'https://placehold.co/1200x800/4f46e5/ffffff?text=Summer+Ocean+Vacation',
+                title: '여름 바다 가족 여행',
+                date: '2026-07-11',
+                desc: '가족들과 함께 해변가를 걸으며 맞이했던 가슴 탁 트이는 시원한 수평선의 추억입니다.',
+                tags: '여행, 바다, 추억, 여름'
+            },
+            {
+                id: 'demo_2',
+                url: 'https://placehold.co/1200x800/10b981/ffffff?text=Green+Forest+Hiking',
+                title: '설악산 국립공원 등반',
+                date: '2026-07-17',
+                desc: '울창하게 우거진 녹음 사이로 불어오는 맑고 청량한 바람을 품은 초록의 숲 풍경입니다.',
+                tags: '등산, 설악산, 자연, 숲'
+            },
+            {
+                id: 'demo_3',
+                url: 'https://placehold.co/1200x800/f59e0b/ffffff?text=Cozy+Evening+Cafe',
+                title: '감성 카페 데이트',
+                date: '2026-07-25',
+                desc: '은은한 클래식 음악과 향긋한 브루잉 커피 향이 부드럽게 퍼지던 아늑한 주말의 한 조각.',
+                tags: '일상, 카페, 데이트, 커피'
+            }
+        ];
+
+        let state = {
+            theme: 'light',
+            viewMode: 1, 
+            photos: [],
+            currentPhotoIndex: 0,
+            searchQuery: '',
+            filterDate: null,
+            selectedDate: '2026-07-11',
+            photoOnly: false
+        };
+
+        let calYear = 2026;
+        let calMonth = 6; 
+
+        let slideTimer = null;
+        let slideIndex = 0;
+        let slidePlaySpeed = 3000;
+        let lastSlideMouseX = 0;
+        let lastSlideMouseY = 0;
+        let isSlideTransitioning = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            setInterval(updateClock, 1000);
+            updateClock();
+        });
+
+        async function initApp() {
+            const stored = localStorage.getItem('photo_manager_pro_v3_state');
+            if (stored) {
+                try {
+                    state = JSON.parse(stored);
+                } catch(e) {
+                    writeLog("상태 로딩 에러. 기본 설정을 복구합니다.");
+                }
+            } else {
+                state.photos = [...DEFAULT_PHOTOS];
+            }
+
+            if (state.currentPhotoIndex === undefined || state.currentPhotoIndex >= state.photos.length) {
+                state.currentPhotoIndex = 0;
+            }
+
+            setTheme(state.theme);
+            changeViewMode(state.viewMode);
+            
+            if (state.photoOnly) {
+                state.photoOnly = false; 
+                togglePhotoOnly();
+            } else {
+                updateViewMenuAndRibbonState();
+            }
+
+            document.getElementById('search-input').value = state.searchQuery || '';
+
+            const filterDateObj = state.filterDate ? new Date(state.filterDate) : new Date(state.selectedDate);
+            calYear = filterDateObj.getFullYear();
+            calMonth = filterDateObj.getMonth();
+
+            renderCalendar();
+            renderPhotos();
+            
+            await checkSavedFolder();
+            
+            writeLog("시스템 환경설정 및 저장된 데이터 동기화 완료.");
+            lucide.createIcons();
+        }
+
+        async function connectLocalFolder() {
+            if (!('showDirectoryPicker' in window)) {
+                openAlertDialog("죄송합니다. 사용 중인 브라우저가 File System Access API를 지원하지 않습니다. 구글 크롬(Chrome) 이나 마이크로소프트 엣지(Edge) 브라우저를 사용해 주세요.");
+                return;
+            }
+            try {
+                const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
+                await setSetting('dirHandle', dirHandle);
+                await loadAndSyncFolder(dirHandle);
+                showToast("PC 폴더가 성공적으로 연동되었습니다!");
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    writeLog("폴더 연결 실패: " + err.message);
+                    openAlertDialog("폴더 접근 도중 오류가 발생했습니다: " + err.message);
+                }
+            }
+        }
+
+        async function checkSavedFolder() {
+            try {
+                const dirHandle = await getSetting('dirHandle');
+                if (dirHandle) {
+                    writeLog("이전에 연동된 로컬 폴더를 발견했습니다. 권한 승인이 대기 중입니다.");
+                    updateFolderStatusUI(true, true, dirHandle);
+                } else {
+                    updateFolderStatusUI(false, false);
+                }
+            } catch (e) {
+                console.error("폴더 핸들 검사 중 오류:", e);
+            }
+        }
+
+        async function requestFolderPermission(dirHandle) {
+            const opts = { mode: 'read' };
+            try {
+                if (await dirHandle.queryPermission(opts) === 'granted') {
+                    await loadAndSyncFolder(dirHandle);
+                } else {
+                    const result = await dirHandle.requestPermission(opts);
+                    if (result === 'granted') {
+                        await loadAndSyncFolder(dirHandle);
+                        showToast("폴더 접근 권한이 복원되었습니다.");
+                    } else {
+                        writeLog("폴더 연동 권한 승인이 거부되었습니다.");
+                        showToast("폴더 연동 권한이 필요합니다.");
+                    }
+                }
+            } catch (e) {
+                writeLog("권한 요청 오류: " + e.message);
+            }
+        }
+
+        async function loadAndSyncFolder(dirHandle) {
+            writeLog("로컬 폴더 미디어 스캔 중...");
+            try {
+                const files = [];
+                for await (const entry of dirHandle.values()) {
+                    if (entry.kind === 'file') {
+                        const file = await entry.getFile();
+                        if (file.type.startsWith('image/')) {
+                            const url = URL.createObjectURL(file);
+                            files.push({
+                                id: 'local_' + entry.name + '_' + file.lastModified,
+                                url: url,
+                                title: entry.name.substring(0, entry.name.lastIndexOf('.')) || entry.name,
+                                date: new Date(file.lastModified).toISOString().split('T')[0],
+                                desc: `PC 연결 폴더에서 실시간 동기화된 사진입니다. (용량: ${(file.size / 1024 / 1024).toFixed(2)}MB)`,
+                                tags: 'PC동기화, ' + entry.name.split('.').pop().toUpperCase()
+                            });
+                        }
+                    }
+                }
+
+                if (files.length === 0) {
+                    openAlertDialog("선택된 폴더 안에 지원하는 이미지 파일(JPG, PNG, GIF, WebP)이 없습니다.");
+                    return;
+                }
+
+                state.photos = files;
+                state.currentPhotoIndex = 0;
+                saveState();
+                renderCalendar();
+                renderPhotos();
+                writeLog(`폴더 동기화 완료: 총 ${files.length}장의 사진 감지.`);
+                updateFolderStatusUI(true, false, dirHandle);
+            } catch (e) {
+                writeLog("폴더 스캔 에러: " + e.message);
+                openAlertDialog("폴더 탐색 중 오류가 발생했습니다: " + e.message);
+            }
+        }
+
+        function updateFolderStatusUI(connected, needAuth, dirHandle = null) {
+            const card = document.getElementById('folder-status-card');
+            const text = document.getElementById('folder-status-text');
+            const btn = document.getElementById('folder-auth-btn');
+
+            if (connected) {
+                card.classList.remove('hidden');
+                if (needAuth) {
+                    text.innerText = "안전을 위한 브라우저 보안 규정으로 인해, 최초 1회 폴더 접근 승인이 필요합니다.";
+                    btn.classList.remove('hidden');
+                    btn.onclick = () => requestFolderPermission(dirHandle);
+                } else {
+                    text.innerText = "PC 폴더와 원활하게 연결되었습니다. 실시간으로 앨범 상태를 출력하고 있습니다.";
+                    btn.classList.add('hidden');
+                }
+            } else {
+                card.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        function saveState() {
+            localStorage.setItem('photo_manager_pro_v3_state', JSON.stringify(state));
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const date = String(now.getDate()).padStart(2, '0');
+            const hrs = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            const secs = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('current-system-time').innerText = `${year}-${month}-${date} ${hrs}:${mins}:${secs}`;
+        }
+
+        function writeLog(text) {
+            document.getElementById('system-log-text').innerText = text;
+        }
+
+        function setTheme(theme) {
+            state.theme = theme;
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            saveState();
+            updateViewMenuAndRibbonState();
+        }
+
+        function changeViewMode(mode) {
+            state.viewMode = mode;
+            saveState();
+            updateViewMenuAndRibbonState();
+            renderPhotos();
+            writeLog(`보기 방식 변경: ${mode}장 꽉 찬 보기 모드`);
+        }
+
+        function updateViewMenuAndRibbonState() {
+            document.getElementById('menu-view1-check').classList.add('hidden');
+            document.getElementById('menu-view2-check').classList.add('hidden');
+            document.getElementById('menu-light-check').classList.add('hidden');
+            document.getElementById('menu-dark-check').classList.add('hidden');
+            
+            document.getElementById('ribbon-view-1').classList.remove('bg-indigo-50', 'border-indigo-200', 'dark:bg-slate-700', 'ring-1', 'ring-indigo-400');
+            document.getElementById('ribbon-view-2').classList.remove('bg-indigo-50', 'border-indigo-200', 'dark:bg-slate-700', 'ring-1', 'ring-indigo-400');
+            document.getElementById('ribbon-theme-light').classList.remove('bg-indigo-50', 'border-indigo-200', 'dark:bg-slate-700', 'ring-1', 'ring-indigo-400');
+            document.getElementById('ribbon-theme-dark').classList.remove('bg-indigo-50', 'border-indigo-200', 'dark:bg-slate-700', 'ring-1', 'ring-indigo-400');
+
+            if (state.viewMode === 1) {
+                document.getElementById('menu-view1-check').classList.remove('hidden');
+                document.getElementById('ribbon-view-1').classList.add('bg-indigo-50', 'border-indigo-200', 'dark:bg-slate-700', 'ring-1', 'ring-indigo-400');
+            } else {
+                document.getElementById('menu-view2-check').classList.remove('hidden');
+                document.getElementById('ribbon-view-2').classList.add('bg-indigo-50', 'border-indigo-200', 'dark:bg-slate-700', 'ring-1', 'ring-indigo-400');
+            }
+
+            if (state.theme === 'dark') {
+                document.getElementById('menu-dark-check').classList.remove('hidden');
+                document.getElementById('ribbon-theme-dark').classList.add('bg-indigo-50', 'border-indigo-200', 'dark:bg-slate-700', 'ring-1', 'ring-indigo-400');
+            } else {
+                document.getElementById('menu-light-check').classList.remove('hidden');
+                document.getElementById('ribbon-theme-light').classList.add('bg-indigo-50', 'border-indigo-200', 'dark:bg-slate-700', 'ring-1', 'ring-indigo-400');
+            }
+        }
+
+        function toggleDropdown(event, menuId) {
+            event.stopPropagation();
+            const targetMenu = document.getElementById(menuId);
+            const isCurrentlyHidden = targetMenu.classList.contains('hidden');
+            
+            closeAllDropdowns();
+            
+            if (isCurrentlyHidden) {
+                targetMenu.classList.remove('hidden');
+            }
+        }
+
+        function closeAllDropdowns() {
+            document.getElementById('file-menu').classList.add('hidden');
+            document.getElementById('view-menu').classList.add('hidden');
+            document.getElementById('help-menu').classList.add('hidden');
+        }
+
+        document.addEventListener('click', () => {
+            closeAllDropdowns();
+        });
+
+        function toggleBrowserFullscreen() {
+            const menuCheck = document.getElementById('menu-fullscreen-check');
+            const ribbonBtn = document.getElementById('ribbon-fullscreen');
+
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen()
+                    .then(() => {
+                        menuCheck.classList.remove('hidden');
+                        ribbonBtn.classList.add('bg-teal-50', 'dark:bg-slate-700', 'ring-1', 'ring-teal-400');
+                        writeLog("모니터 화면 채우기(전체화면) 활성화.");
+                    }).catch(err => {
+                        writeLog("전체화면 전환 실패: " + err.message);
+                    });
+            } else {
+                document.exitFullscreen();
+                menuCheck.classList.add('hidden');
+                ribbonBtn.classList.remove('bg-teal-50', 'dark:bg-slate-700', 'ring-1', 'ring-teal-400');
+                writeLog("전체화면 해제 완료.");
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const menuCheck = document.getElementById('menu-fullscreen-check');
+            const ribbonBtn = document.getElementById('ribbon-fullscreen');
+            if (!document.fullscreenElement) {
+                menuCheck.classList.add('hidden');
+                ribbonBtn.classList.remove('bg-teal-50', 'dark:bg-slate-700', 'ring-1', 'ring-teal-400');
+            }
+        });
+
+        function togglePhotoOnly() {
+            state.photoOnly = !state.photoOnly;
+            saveState();
+
+            const header = document.getElementById('top-header');
+            const ribbon = document.getElementById('ribbon-bar');
+            const leftBar = document.getElementById('sidebar-left');
+            const rightBar = document.getElementById('sidebar-right');
+            const footer = document.getElementById('top-footer');
+            const floatingExit = document.getElementById('floating-exit-photo-only');
+            const centerSection = document.getElementById('center-viewer-section');
+
+            const menuCheck = document.getElementById('menu-photo-only-check');
+            const ribbonBtn = document.getElementById('ribbon-photo-only');
+
+            if (state.photoOnly) {
+                header.classList.add('hidden');
+                ribbon.classList.add('hidden');
+                leftBar.classList.add('hidden');
+                rightBar.classList.add('hidden');
+                footer.classList.add('hidden');
+                floatingExit.classList.remove('hidden');
+                centerSection.classList.replace('p-4', 'p-0');
+                centerSection.classList.add('bg-black');
+
+                menuCheck.classList.remove('hidden');
+                ribbonBtn.classList.add('bg-purple-50', 'dark:bg-slate-700', 'ring-1', 'ring-purple-400');
+                writeLog("사진첩 집중 감상 모드 전환 완료.");
+            } else {
+                header.classList.remove('hidden');
+                ribbon.classList.remove('hidden');
+                leftBar.classList.remove('hidden');
+                rightBar.classList.remove('hidden');
+                footer.classList.remove('hidden');
+                floatingExit.classList.add('hidden');
+                centerSection.classList.replace('p-0', 'p-4');
+                centerSection.classList.remove('bg-black');
+
+                menuCheck.classList.add('hidden');
+                ribbonBtn.classList.remove('bg-purple-50', 'dark:bg-slate-700', 'ring-1', 'ring-purple-400');
+                writeLog("사진첩 집중 감상 모드 해제.");
+            }
+        }
+
+        function renderCalendar() {
+            const calendarDays = document.getElementById('calendar-days');
+            calendarDays.innerHTML = '';
+
+            document.getElementById('calendar-month-year').innerText = `${calYear}년 ${String(calMonth + 1).padStart(2, '0')}월`;
+
+            const firstDay = new Date(calYear, calMonth, 1);
+            const startDayOfWeek = firstDay.getDay(); 
+            const lastDate = new Date(calYear, calMonth + 1, 0).getDate(); 
+            const prevLastDate = new Date(calYear, calMonth, 0).getDate(); 
+
+            let cells = [];
+
+            // 이전 달 빈칸 채우기
+            for (let i = startDayOfWeek - 1; i >= 0; i--) {
+                const pYear = calMonth === 0 ? calYear - 1 : calYear;
+                const pMonth = calMonth === 0 ? 12 : calMonth;
+                cells.push({
+                    day: prevLastDate - i,
+                    isCurrentMonth: false,
+                    dateStr: `${pYear}-${String(pMonth).padStart(2, '0')}-${String(prevLastDate - i).padStart(2, '0')}`
+                });
+            }
+
+            // 현재 달 채우기
+            for (let i = 1; i <= lastDate; i++) {
+                cells.push({
+                    day: i,
+                    isCurrentMonth: true,
+                    dateStr: `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+                });
+            }
+
+            // 다음 달 채우기
+            let nextDay = 1;
+            while (cells.length < 42) {
+                const nYear = calMonth === 11 ? calYear + 1 : calYear;
+                const nMonth = calMonth === 11 ? 1 : calMonth + 2;
+                cells.push({
+                    day: nextDay,
+                    isCurrentMonth: false,
+                    dateStr: `${nYear}-${String(nMonth).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`
+                });
+                nextDay++;
+            }
+
+            // 1. 헤더 요일 라벨 상단 주말 색상 적용 (일요일 레드, 토요일 블루)
+            const weekLabels = ['일', '월', '화', '수', '목', '금', '토'];
+            weekLabels.forEach((label, index) => {
+                const dayHeader = document.createElement('div');
+                let labelColor = 'text-slate-500 dark:text-slate-400'; 
+                if (index === 0) labelColor = 'text-red-500 dark:text-red-400 font-bold'; 
+                if (index === 6) labelColor = 'text-blue-500 dark:text-blue-400 font-bold'; 
+                
+                dayHeader.className = `font-bold py-1 border-b border-slate-100 dark:border-slate-700/60 ${labelColor}`;
+                dayHeader.innerText = label;
+                calendarDays.appendChild(dayHeader);
+            });
+
+            // 2. 날짜 셀 렌더링 및 요일/공휴일 색상 분기 처리
+            cells.forEach(cell => {
+                const dayCell = document.createElement('div');
+                const cellDate = new Date(cell.dateStr);
+                const dayOfWeek = cellDate.getDay();
+                const mmdd = cell.dateStr.substring(5); // MM-DD 포맷 추출
+                
+                let dayColorClass = 'text-slate-800 dark:text-slate-200'; // 평일 기본색
+                
+                if (!cell.isCurrentMonth) {
+                    // 이전달/다음달 날짜 희석 처리
+                    if (dayOfWeek === 0) {
+                        dayColorClass = 'text-red-300 dark:text-red-900/60';
+                    } else if (dayOfWeek === 6) {
+                        dayColorClass = 'text-blue-300 dark:text-blue-900/60';
+                    } else {
+                        dayColorClass = 'text-slate-300 dark:text-slate-600'; 
+                    }
+                } else {
+                    // 현재 달의 날짜 색상 매핑
+                    if (HOLIDAYS_DB[mmdd]) {
+                        // 공휴일 최우선 적용: 선명한 레드 + 굵게
+                        dayColorClass = 'text-red-600 dark:text-red-400 font-bold bg-rose-50/60 dark:bg-rose-950/30';
+                    } else if (dayOfWeek === 0) {
+                        // 일요일: 레드
+                        dayColorClass = 'text-red-500 dark:text-red-400 font-semibold'; 
+                    } else if (dayOfWeek === 6) {
+                        // 토요일: 블루
+                        dayColorClass = 'text-blue-500 dark:text-blue-400 font-semibold'; 
+                    }
+                }
+
+                dayCell.className = `relative py-2 border-b border-r border-slate-100 dark:border-slate-700/60 cursor-pointer h-10 transition hover:bg-slate-50 dark:hover:bg-slate-700/40 flex flex-col items-center justify-between ${dayColorClass}`;
+
+                // 오늘 날짜 강조 표시
+                const today = new Date();
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                if (cell.dateStr === todayStr) {
+                    dayCell.className += " ring-2 ring-indigo-500 dark:ring-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-sm font-bold";
+                }
+
+                const numSpan = document.createElement('span');
+                numSpan.innerText = cell.day;
+                numSpan.className = "text-[10px]";
+                dayCell.appendChild(numSpan);
+
+                // 클릭 시 해당 날짜로 사진 필터링
+                dayCell.onclick = () => selectCalendarDate(cell.dateStr);
+
+                // 사진이 등록된 날 카운트 배지 생성
+                const matchedPhotos = state.photos.filter(p => p.date === cell.dateStr);
+                if (matchedPhotos.length > 0) {
+                    const badge = document.createElement('span');
+                    badge.className = "absolute bottom-0.5 right-0.5 text-[8px] bg-indigo-500 text-white rounded px-1 flex items-center gap-0.5 shadow-sm scale-90";
+                    badge.innerHTML = `📷 ${matchedPhotos.length}`;
+                    dayCell.appendChild(badge);
+                }
+
+                // 공휴일 마우스 오버 시 위젯 연동 및 타이틀 제공
+                if (cell.isCurrentMonth && HOLIDAYS_DB[mmdd]) {
+                    dayCell.title = HOLIDAYS_DB[mmdd].name;
+                    dayCell.onmouseover = () => triggerHolidayWidget(mmdd, cell.dateStr);
+                }
+
+                calendarDays.appendChild(dayCell);
+            });
+        }
+
+        function changeMonth(delta) {
+            calMonth += delta;
+            if (calMonth < 0) {
+                calMonth = 11;
+                calYear--;
+            } else if (calMonth > 11) {
+                calMonth = 0;
+                calYear++;
+            }
+            renderCalendar();
+        }
+
+        function goToday() {
+            const today = new Date();
+            calYear = today.getFullYear();
+            calMonth = today.getMonth();
+            state.selectedDate = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            state.filterDate = null;
+            saveState();
+            renderCalendar();
+            renderPhotos();
+            writeLog("오늘 날짜로 달력 및 사진첩 정렬 복원.");
+        }
+
+        function triggerHolidayWidget(mmdd, fullDate) {
+            const holiday = HOLIDAYS_DB[mmdd];
+            if (holiday) {
+                const widget = document.getElementById('holiday-widget-content');
+                widget.innerHTML = `
+                    <p class="font-bold text-rose-600 dark:text-rose-400 mb-1">"${holiday.name}" [${fullDate}]</p>
+                    <p class="text-slate-600 dark:text-slate-300 leading-normal text-[9.5px]">${holiday.desc}</p>
+                `;
+            }
+        }
+
+        function selectCalendarDate(dateStr) {
+            state.filterDate = dateStr;
+            state.selectedDate = dateStr;
+            saveState();
+            renderPhotos();
+            
+            const activeBar = document.getElementById('filter-active-bar');
+            activeBar.classList.remove('hidden');
+            document.getElementById('filter-active-text').innerText = `[${dateStr}] 날짜 필터 적용 중`;
+        }
+
+        function resetFilters() {
+            state.filterDate = null;
+            state.searchQuery = '';
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-active-bar').classList.add('hidden');
+            saveState();
+            renderPhotos();
+            writeLog("필터를 초기화하고 전체 앨범 목록을 다시 렌더링합니다.");
+        }
+
+        function renderPhotos() {
+            const grid = document.getElementById('photo-viewer-grid');
+            grid.innerHTML = '';
+
+            let filtered = [...state.photos];
+            if (state.filterDate) {
+                filtered = filtered.filter(p => p.date === state.filterDate);
+            }
+            if (state.searchQuery) {
+                const q = state.searchQuery.toLowerCase();
+                filtered = filtered.filter(p => 
+                    p.title.toLowerCase().includes(q) ||
+                    p.desc.toLowerCase().includes(q) ||
+                    p.tags.toLowerCase().includes(q) ||
+                    p.date.includes(q)
+                );
+            }
+
+            document.getElementById('photo-count-badge').innerText = `${filtered.length}장`;
+            if (state.filterDate) {
+                document.getElementById('current-view-title').innerText = `${state.filterDate} 날짜의 사진`;
+            } else if (state.searchQuery) {
+                document.getElementById('current-view-title').innerText = `검색 결과`;
+            } else {
+                document.getElementById('current-view-title').innerText = `모든 사진`;
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="flex flex-col items-center justify-center p-10 text-slate-400 text-center">
+                        <i data-lucide="image-off" class="w-12 h-12 mb-3"></i>
+                        <p class="text-xs">이 구간에 표시할 사진이 존재하지 않습니다.</p>
+                    </div>
+                `;
+                document.getElementById('photo-navigation-indicator').innerText = '0 / 0';
+                document.getElementById('summary-title').innerText = '등록된 이미지 없음';
+                document.getElementById('summary-date').innerText = '';
+                document.getElementById('summary-desc').innerText = '가져오기 혹은 PC 폴더 연결을 수행하여 추억을 담아보세요.';
+                document.getElementById('summary-tags').classList.add('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            if (state.currentPhotoIndex >= filtered.length) {
+                state.currentPhotoIndex = 0;
+            }
+
+            document.getElementById('photo-navigation-indicator').innerText = `${state.currentPhotoIndex + 1} / ${filtered.length}`;
+
+            const targetImage_1 = filtered[state.currentPhotoIndex];
+            
+            if (state.viewMode === 1) {
+                const box = createPhotoBox(targetImage_1);
+                grid.appendChild(box);
+            } else {
+                const box1 = createPhotoBox(targetImage_1);
+                grid.appendChild(box1);
+
+                const nextIndex = state.currentPhotoIndex + 1;
+                if (nextIndex < filtered.length) {
+                    const targetImage_2 = filtered[nextIndex];
+                    const box2 = createPhotoBox(targetImage_2);
+                    grid.appendChild(box2);
+                } else {
+                    const emptyCard = document.createElement('div');
+                    emptyCard.className = "flex-1 h-full rounded-2xl bg-slate-200/20 dark:bg-slate-800/10 border border-dashed border-slate-300 dark:border-slate-700/60 flex items-center justify-center";
+                    emptyCard.innerHTML = `<span class="text-[10px] text-slate-400">마지막 슬롯</span>`;
+                    grid.appendChild(emptyCard);
+                }
+            }
+
+            document.getElementById('summary-title').innerText = targetImage_1.title || '무제';
+            document.getElementById('summary-date').innerText = targetImage_1.date || '날짜 미등록';
+            document.getElementById('summary-desc').innerText = targetImage_1.desc || '작성된 상세 사진 메모 정보가 존재하지 않습니다.';
+            
+            const tagsSpan = document.getElementById('summary-tags');
+            if (targetImage_1.tags) {
+                tagsSpan.innerText = targetImage_1.tags.split(',').map(t => `#${t.trim()}`).join(' ');
+                tagsSpan.classList.remove('hidden');
+            } else {
+                tagsSpan.classList.add('hidden');
+            }
+
+            lucide.createIcons();
+        }
+
+        function createPhotoBox(photoObj) {
+            const wrapper = document.createElement('div');
+            wrapper.className = "flex-1 h-full flex items-center justify-center relative rounded-2xl bg-slate-200/40 dark:bg-slate-950/50 p-2 overflow-hidden border border-slate-200/80 dark:border-slate-800/50 shadow-sm";
+            
+            const img = document.createElement('img');
+            img.src = photoObj.url;
+            img.alt = photoObj.title;
+            img.className = "max-w-full max-h-full object-contain rounded-xl select-none transition duration-300 transform hover:scale-[1.01]";
+            img.onerror = () => {
+                img.src = "https://placehold.co/800x600/ef4444/ffffff?text=Image+Load+Error";
+            };
+
+            wrapper.appendChild(img);
+            return wrapper;
+        }
+
+        function navigatePhoto(dir) {
+            let filtered = [...state.photos];
+            if (state.filterDate) {
+                filtered = filtered.filter(p => p.date === state.filterDate);
+            }
+            if (state.searchQuery) {
+                const q = state.searchQuery.toLowerCase();
+                filtered = filtered.filter(p => p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
+            }
+
+            if (filtered.length === 0) return;
+
+            let nextIdx = state.currentPhotoIndex + dir;
+            if (nextIdx < 0) {
+                nextIdx = filtered.length - 1;
+            } else if (nextIdx >= filtered.length) {
+                nextIdx = 0;
+            }
+
+            state.currentPhotoIndex = nextIdx;
+            saveState();
+            renderPhotos();
+        }
+
+        function triggerImport() {
+            document.getElementById('photo-import-input').click();
+            closeAllDropdowns();
+        }
+
+        function handlePhotoImport(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            const file = files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const newPhoto = {
+                    id: 'user_' + Date.now(),
+                    url: e.target.result, 
+                    title: file.name.substring(0, file.name.lastIndexOf('.')) || file.name,
+                    date: new Date().toISOString().split('T')[0],
+                    desc: '사용자가 로컬 브라우저로 업로드한 사진 데이터입니다.',
+                    tags: '가져오기, 신규'
+                };
+                state.photos.unshift(newPhoto);
+                state.currentPhotoIndex = 0;
+                saveState();
+                renderCalendar();
+                renderPhotos();
+                showToast("새 사진이 앨범에 등록되었습니다!");
+                writeLog("사진첩 마스터 데이터 리프레시 성공.");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('search-input').value;
+            state.searchQuery = query;
+            state.currentPhotoIndex = 0;
+            saveState();
+            renderPhotos();
+        }
+
+        function openEditModal() {
+            let filtered = [...state.photos];
+            if (state.filterDate) {
+                filtered = filtered.filter(p => p.date === state.filterDate);
+            }
+            if (state.searchQuery) {
+                const q = state.searchQuery.toLowerCase();
+                filtered = filtered.filter(p => p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
+            }
+
+            if (filtered.length === 0) return;
+
+            const currentActivePhoto = filtered[state.currentPhotoIndex];
+            
+            document.getElementById('modal-edit-title').value = currentActivePhoto.title || '';
+            document.getElementById('modal-edit-date').value = currentActivePhoto.date || '';
+            document.getElementById('modal-edit-desc').value = currentActivePhoto.desc || '';
+            document.getElementById('modal-edit-tags').value = currentActivePhoto.tags || '';
+
+            document.getElementById('edit-photo-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-photo-modal').classList.add('hidden');
+        }
+
+        function saveModalPhotoInfo() {
+            let filtered = [...state.photos];
+            if (state.filterDate) {
+                filtered = filtered.filter(p => p.date === state.filterDate);
+            }
+            if (state.searchQuery) {
+                const q = state.searchQuery.toLowerCase();
+                filtered = filtered.filter(p => p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
+            }
+
+            if (filtered.length === 0) return;
+
+            const currentActivePhoto = filtered[state.currentPhotoIndex];
+            
+            const targetId = currentActivePhoto.id;
+            const originalIndex = state.photos.findIndex(p => p.id === targetId);
+
+            if (originalIndex !== -1) {
+                state.photos[originalIndex].title = document.getElementById('modal-edit-title').value;
+                state.photos[originalIndex].date = document.getElementById('modal-edit-date').value;
+                state.photos[originalIndex].desc = document.getElementById('modal-edit-desc').value;
+                state.photos[originalIndex].tags = document.getElementById('modal-edit-tags').value;
+                
+                saveState();
+                renderCalendar();
+                renderPhotos();
+                showToast("사진 상세정보가 수정되었습니다.");
+                writeLog("메타데이터 수집 및 매핑 갱신 완료.");
+            }
+            closeEditModal();
+        }
+
+        let slideControlsTimer = null;
+
+        function showSlideshowUI(e) {
+            // 트랜지션 중이거나 좌표 변화 없는 가짜 이벤트 차단
+            if (isSlideTransitioning) return;
+            if (e && e.type === 'mousemove') {
+                if (e.clientX === lastSlideMouseX && e.clientY === lastSlideMouseY) {
+                    return;
+                }
+                lastSlideMouseX = e.clientX;
+                lastSlideMouseY = e.clientY;
+            }
+
+            const uiElements = document.querySelectorAll('.slideshow-ui-el');
+            uiElements.forEach(el => {
+                el.classList.remove('opacity-0', 'pointer-events-none');
+                el.classList.add('opacity-100');
+            });
+            document.getElementById('slideshow-overlay').style.cursor = 'default';
+            
+            clearTimeout(slideControlsTimer);
+            slideControlsTimer = setTimeout(hideSlideshowUI, 2500); 
+        }
+
+        function hideSlideshowUI() {
+            if (!state.photos.length) return;
+            const uiElements = document.querySelectorAll('.slideshow-ui-el');
+            uiElements.forEach(el => {
+                el.classList.remove('opacity-100');
+                el.classList.add('opacity-0', 'pointer-events-none');
+            });
+            document.getElementById('slideshow-overlay').style.cursor = 'none';
+        }
+
+        function startSlideshow() {
+            if (state.photos.length === 0) {
+                openAlertDialog("슬라이드 쇼 재생을 구동할 사진 소스가 전혀 존재하지 않습니다.");
+                return;
+            }
+            slideIndex = 0;
+            closeAllDropdowns();
+            
+            const overlay = document.getElementById('slideshow-overlay');
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+            }, 50);
+
+            showSlide(slideIndex);
+            writeLog("전체 감상용 슬라이드 쇼 오버레이 가동");
+            
+            playSlideTimer();
+            showSlideshowUI(); 
+        }
+
+        function stopSlideshow() {
+            clearTimeout(slideTimer);
+            slideTimer = null;
+            clearTimeout(slideControlsTimer); 
+            document.getElementById('slideshow-overlay').style.cursor = 'default';
+
+            const overlay = document.getElementById('slideshow-overlay');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+            writeLog("슬라이드 재생 모드 해제.");
+        }
+
+        function showSlide(index) {
+            if (state.photos.length === 0) return;
+            
+            const photo = state.photos[index];
+            const img = document.getElementById('slideshow-img');
+            const title = document.getElementById('slideshow-title');
+            const desc = document.getElementById('slideshow-desc');
+            const indicator = document.getElementById('slideshow-indicator');
+            const effect = document.getElementById('slideshow-effect') ? document.getElementById('slideshow-effect').value : 'fade';
+
+            // 트랜지션 락 활성화
+            isSlideTransitioning = true;
+            
+            // 기존 클래스 및 인라인 스타일 초기화
+            img.className = "absolute inset-0 w-full h-full object-contain select-none";
+            img.removeAttribute('style');
+
+            if (effect === 'curtain') {
+                // 1. 클래식 극장식 커튼 효과 구현
+                const curtainL = document.getElementById('curtain-left');
+                const curtainR = document.getElementById('curtain-right');
+                
+                // 커튼 닫기 (화면 중앙으로 슬라이드)
+                curtainL.classList.remove('-translate-x-full');
+                curtainL.classList.add('translate-x-0');
+                curtainR.classList.remove('translate-x-full');
+                curtainR.classList.add('translate-x-0');
+                
+                setTimeout(() => {
+                    // 커튼 뒤에서 이미지 교체
+                    img.src = photo.url;
+                    title.innerText = photo.title || '무제';
+                    desc.innerText = `${photo.date} | ${photo.desc || '설명이 없습니다.'}`;
+                    indicator.innerText = `${index + 1} / ${state.photos.length}`;
+                    
+                    // 커튼 다시 열기
+                    curtainL.classList.remove('translate-x-0');
+                    curtainL.classList.add('-translate-x-full');
+                    curtainR.classList.remove('translate-x-0');
+                    curtainR.classList.add('translate-x-full');
+                    
+                    setTimeout(() => {
+                        isSlideTransitioning = false;
+                    }, 500);
+                }, 400); // 400ms 동안 닫힘 대기
+                
+            } else if (effect === 'slide-left') {
+                // 2. 좌에서 우로 밀어내기 효과
+                img.style.transition = 'none';
+                img.style.transform = 'translateX(-100%) scale(0.96)';
+                img.style.opacity = '0';
+                
+                setTimeout(() => {
+                    img.src = photo.url;
+                    title.innerText = photo.title || '무제';
+                    desc.innerText = `${photo.date} | ${photo.desc || '설명이 없습니다.'}`;
+                    indicator.innerText = `${index + 1} / ${state.photos.length}`;
+                    
+                    img.style.transition = 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease';
+                    img.style.transform = 'translateX(0) scale(1)';
+                    img.style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        isSlideTransitioning = false;
+                    }, 600);
+                }, 50);
+
+            } else if (effect === 'slide-right') {
+                // 3. 우에서 좌로 밀어내기 효과
+                img.style.transition = 'none';
+                img.style.transform = 'translateX(100%) scale(0.96)';
+                img.style.opacity = '0';
+                
+                setTimeout(() => {
+                    img.src = photo.url;
+                    title.innerText = photo.title || '무제';
+                    desc.innerText = `${photo.date} | ${photo.desc || '설명이 없습니다.'}`;
+                    indicator.innerText = `${index + 1} / ${state.photos.length}`;
+                    
+                    img.style.transition = 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease';
+                    img.style.transform = 'translateX(0) scale(1)';
+                    img.style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        isSlideTransitioning = false;
+                    }, 600);
+                }, 50);
+
+            } else if (effect === 'slide-down') {
+                // 4. 위에서 아래로 슬라이딩 효과
+                img.style.transition = 'none';
+                img.style.transform = 'translateY(-100%)';
+                img.style.opacity = '0';
+                
+                setTimeout(() => {
+                    img.src = photo.url;
+                    title.innerText = photo.title || '무제';
+                    desc.innerText = `${photo.date} | ${photo.desc || '설명이 없습니다.'}`;
+                    indicator.innerText = `${index + 1} / ${state.photos.length}`;
+                    
+                    img.style.transition = 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease';
+                    img.style.transform = 'translateY(0)';
+                    img.style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        isSlideTransitioning = false;
+                    }, 600);
+                }, 50);
+
+            } else {
+                // 5. 기본 페이드 앤 줌 효과
+                img.style.transition = 'none';
+                img.style.transform = 'scale(0.95)';
+                img.style.opacity = '0';
+                
+                setTimeout(() => {
+                    img.src = photo.url;
+                    title.innerText = photo.title || '무제';
+                    desc.innerText = `${photo.date} | ${photo.desc || '설명이 없습니다.'}`;
+                    indicator.innerText = `${index + 1} / ${state.photos.length}`;
+                    
+                    img.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
+                    img.style.transform = 'scale(1)';
+                    img.style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        isSlideTransitioning = false;
+                    }, 550);
+                }, 50);
+            }
+        }
+
+        function navigateSlide(dir) {
+            slideIndex += dir;
+            if (slideIndex < 0) {
+                slideIndex = state.photos.length - 1;
+            } else if (slideIndex >= state.photos.length) {
+                slideIndex = 0;
+            }
+            showSlide(slideIndex);
+            
+            if (slideTimer) {
+                playSlideTimer();
+            }
+            // 자동 재생 전환 시에는 showSlideshowUI() 호출을 완전히 제거합니다.
+        }
+
+        // 전역 방향키 이벤트 리스너 등록
+        window.addEventListener("keydown", function(event) {
+            const activeTag = document.activeElement.tagName.toLowerCase();
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+
+            const slideshowOverlay = document.getElementById('slideshow-overlay');
+            if (slideshowOverlay && !slideshowOverlay.classList.contains('hidden')) {
+                if (event.key === "ArrowLeft") {
+                    navigateSlide(-1);
+                    showSlideshowUI(event); // 수동 조작 시 즉시 UI 띄움
+                } else if (event.key === "ArrowRight") {
+                    navigateSlide(1);
+                    showSlideshowUI(event); // 수동 조작 시 즉시 UI 띄움
+                }
+                return;
+            }
+
+            if (event.key === "ArrowLeft") {
+                navigatePhoto(-1);
+            } else if (event.key === "ArrowRight") {
+                navigatePhoto(1);
+            }
+        });
+
+        function toggleSlidePlay() {
+            const btn = document.getElementById('slideshow-play-btn');
+            if (slideTimer) {
+                clearTimeout(slideTimer);
+                slideTimer = null;
+                btn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i>`;
+                showToast("슬라이드 플레이 일시정지");
+            } else {
+                playSlideTimer();
+                btn.innerHTML = `<i data-lucide="pause" class="w-4 h-4"></i>`;
+                showToast("슬라이드 자동 재생 재개");
+            }
+            lucide.createIcons();
+            showSlideshowUI(); 
+        }
+
+        function playSlideTimer() {
+            clearTimeout(slideTimer);
+            slideTimer = setTimeout(() => {
+                navigateSlide(1);
+            }, slidePlaySpeed);
+        }
+
+        function changeSlideshowSpeed() {
+            const speedVal = parseInt(document.getElementById('slideshow-speed').value);
+            slidePlaySpeed = speedVal;
+            if (slideTimer) {
+                playSlideTimer();
+            }
+            showToast(`전환 시간 딜레이: ${speedVal / 1000}초 수정`);
+            showSlideshowUI(); 
+        }
+
+        function openAlertDialog(message) {
+            const overlay = document.getElementById('custom-dialog-overlay');
+            const cancelBtn = document.getElementById('custom-dialog-cancel');
+            const msgEl = document.getElementById('custom-dialog-message');
+            const okBtn = document.getElementById('custom-dialog-ok');
+
+            msgEl.innerText = message;
+            cancelBtn.classList.add('hidden');
+            
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                overlay.firstElementChild.classList.remove('scale-95');
+            }, 10);
+
+            okBtn.onclick = () => {
+                closeCustomDialog();
+            };
+        }
+
+        function openConfirmDialog(message, confirmCallback) {
+            const overlay = document.getElementById('custom-dialog-overlay');
+            const cancelBtn = document.getElementById('custom-dialog-cancel');
+            const msgEl = document.getElementById('custom-dialog-message');
+            const okBtn = document.getElementById('custom-dialog-ok');
+
+            msgEl.innerText = message;
+            cancelBtn.classList.remove('hidden');
+            
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                overlay.firstElementChild.classList.remove('scale-95');
+            }, 10);
+
+            okBtn.onclick = () => {
+                if (confirmCallback) confirmCallback();
+                closeCustomDialog();
+            };
+
+            cancelBtn.onclick = () => {
+                closeCustomDialog();
+            };
+        }
+
+        function closeCustomDialog() {
+            const overlay = document.getElementById('custom-dialog-overlay');
+            overlay.firstElementChild.classList.add('scale-95');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 150);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('custom-toast');
+            document.getElementById('custom-toast-text').innerText = message;
+            toast.classList.remove('opacity-0', 'translate-y-2');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-2');
+            }, 2500);
+        }
+
+        function showInfoModal() {
+            document.getElementById('info-modal').classList.remove('hidden');
+            closeAllDropdowns();
+        }
+
+        function closeInfoModal() {
+            document.getElementById('info-modal').classList.add('hidden');
+        }
+
+        async function clearAllData() {
+            localStorage.removeItem('photo_manager_pro_v3_state');
+            await deleteSetting('dirHandle'); 
+            initApp();
+            showToast("보관함과 저장 정보가 기본 규격으로 포맷되었습니다.");
+            writeLog("마스터 팩토리 공정 초기화 완료.");
+            closeAllDropdowns();
+        }
+    </script>
+</body>
+</html>
