@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Smart Diary</title>
+    <link href="https://fonts.googleapis.com/css2?family=KyoboHandwriting&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #fcfbfa;
+            --panel-bg: #ffffff;
+            --top-bg: #f3f0ec;
+            --border-color: #e4e0da;
+            --text-color: #333333;
+            --primary-color: #8e8071;
+            --primary-hover: #75685a;
+            --log-bg: #3e3832;
+            --log-text: #f5f0eb;
+            --sat-color: #4a90e2;
+            --sun-color: #d9534f;
+        }
+
+        .dark {
+            --bg-color: #1a1919;
+            --panel-bg: #242322;
+            --top-bg: #2d2b2a;
+            --border-color: #3a3836;
+            --text-color: #e5e1dc;
+            --primary-color: #a39587;
+            --primary-hover: #bdaf9f;
+            --log-bg: #111010;
+            --log-text: #a39587;
+            --sat-color: #6ba4e8;
+            --sun-color: #ff6b6b;
+        }
+
+        * { box-sizing: border-box; font-family: 'Pretendard', 'Malgun Gothic', sans-serif; }
+        
+        html, body { 
+            margin: 0; padding: 0; height: 100vh; 
+            background-color: var(--bg-color); color: var(--text-color);
+            overflow: hidden; transition: background-color 0.3s, color 0.3s;
+        }
+
+        body { display: flex; flex-direction: column; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: var(--panel-bg); padding: 30px; border-radius: 12px;
+            text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 360px;
+        }
+
+        .top { 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 24px; background: var(--top-bg); border-bottom: 1px solid var(--border-color); height: 60px;
+        }
+        .top .logo { font-size: 20px; font-weight: 700; color: var(--primary-color); letter-spacing: -0.5px; }
+        .top .menu-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .top select { width: auto; padding: 6px 10px; font-size: 13px; }
+        .top .style-options { display: flex; gap: 8px; align-items: center; font-size: 13px; background: var(--panel-bg); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color); }
+
+        .layout { 
+            display: grid; grid-template-columns: 360px 1fr 360px; flex: 1;
+            height: calc(100vh - 100px); overflow: hidden;
+        }
+        .left, .center, .right { padding: 24px; overflow-y: auto; height: 100%; }
+        
+        .left { border-right: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; gap: 14px; }
+        .right { border-left: 1px solid var(--border-color); display: flex; flex-direction: column; }
+        .center { display: flex; flex-direction: column; background: var(--panel-bg); gap: 14px; }
+
+        h2, h3 { margin: 0; color: var(--text-color); font-weight: 600; }
+        
+        button {
+            padding: 8px 14px; background-color: var(--primary-color); color: white;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 14px;
+            font-weight: 500; transition: background-color 0.2s;
+        }
+        button:hover { background-color: var(--primary-hover); }
+
+        input[type='date'], select, textarea, input[type='text'], input[type='password'] { 
+            width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;
+            background-color: var(--panel-bg); color: var(--text-color); font-size: 15px; outline: none;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary-color); }
+        
+        #txt { 
+            flex: 1; min-height: 200px; resize: none; padding: 15px; font-size: 16px; line-height: 30px;
+            border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--panel-bg); color: var(--text-color);
+        }
+
+        #txt.opt-paper { background-color: #fbf7f0 !important; color: #3e3832 !important; }
+        .dark #txt.opt-paper { background-color: #2a2827 !important; color: #e5e1dc !important; }
+
+        #txt.opt-lines { 
+            background-image: linear-gradient(var(--border-color) 1px, transparent 1px);
+            background-size: 100% 30px; background-position: 0 12px; background-repeat: repeat;
+        }
+        #txt.opt-paper.opt-lines { background-image: linear-gradient(#e4e0da 1px, transparent 1px); }
+        .dark #txt.opt-paper.opt-lines { background-image: linear-gradient(#3a3836 1px, transparent 1px); }
+
+        #txt.opt-ring { padding-left: 50px !important; border-left: 4px double var(--primary-color) !important; box-shadow: inset 5px 0 7px -3px rgba(0,0,0,0.15); }
+        
+        .entry { 
+            border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; 
+            margin-bottom: 12px; background: var(--panel-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .entry b { color: var(--primary-color); }
+        .entry .btn-group { margin-top: 10px; display: flex; gap: 6px; }
+        .entry button { padding: 4px 8px; font-size: 12px; }
+
+        .cal-container { display: flex; flex-direction: column; gap: 8px; flex: 6.5; min-height: 0; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .cal-title-wrapper { display: flex; align-items: center; gap: 8px; }
+        #current-month-display { font-size: 14px; font-weight: 500; color: var(--primary-color); background: var(--top-bg); padding: 2px 8px; border-radius: 4px; }
+        .cal-nav { display: flex; gap: 4px; }
+        .cal-nav button { padding: 4px 10px; font-size: 12px; }
+        
+        #calendar { flex: 1; min-height: 0; width: 100%; }
+        .fc { --fc-border-color: var(--border-color); font-size: 16.5px !important; } 
+        .fc .fc-col-header-cell-cushion { font-size: 14px !important; padding: 2px 0 !important; }
+        .fc .fc-toolbar { margin-bottom: 0 !important; }
+        .fc .fc-day-sat a { color: var(--sat-color) !important; text-decoration: none; }
+        .fc .fc-day-sun a { color: var(--sun-color) !important; text-decoration: none; }
+        .fc .fc-daygrid-day-number { padding: 2px 4px !important; font-weight: 700 !important; display: block; text-align: center; width: 100%; }
+        .fc .fc-event { font-size: 14px !important; padding: 0px 1px !important; border: none !important; text-align: center; background: transparent !important; }
+        .fc .fc-scrollgrid { border: 1px solid var(--border-color) !important; }
+
+        .chart-container { display: flex; flex-direction: column; gap: 4px; flex: 3.5; min-height: 0; position: relative; }
+        .chart-wrapper { position: relative; flex: 1; min-height: 0; width: 100%; }
+
+        .search-container { width: 100%; margin-bottom: 12px; }
+        #search { width: 100%; display: block; font-size: 16px; padding: 12px; }
+        #list { flex: 1; overflow-y: auto; }
+
+        .log { height: 40px; line-height: 40px; background: var(--log-bg); color: var(--log-text); padding-left: 20px; font-size: 13px; font-weight: 500; border-top: 1px solid var(--border-color); }
+        img { max-width: 100%; border-radius: 6px; margin-top: 8px; }
+        label { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+        label input { width: auto; margin: 0; }
+    </style>
+</head>
+<body>
+
+<!-- 로그인 모달 -->
+<div id="login-modal" class="modal-overlay" style="display: flex;">
+    <div class="modal-content">
+        <h3 style="margin-bottom: 10px;">🔒 스마트 다이어리 로그인</h3>
+        <p style="margin-bottom: 15px; font-size: 14px;" id="login-msg">사용할 ID와 비밀번호를 입력해주세요.</p>
+        <input type="text" id="userid-input" placeholder="사용자 ID 입력" style="margin-bottom: 10px;">
+        <input type="password" id="password-input" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter') handleAuthAction()" style="margin-bottom: 10px;">
+        <div style="display: flex; gap: 8px; margin-top: 5px;">
+            <button onclick="handleAuthAction()" style="flex: 1;">접속하기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 비밀번호 변경 모달 -->
+<div id="password-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="margin-bottom: 10px;">🔑 비밀번호 변경</h3>
+        <p style="margin-bottom: 15px; font-size: 14px;" id="pw-change-msg">현재 비밀번호와 새 비밀번호를 입력하세요.</p>
+        <input type="password" id="current-pw-input" placeholder="현재 비밀번호" style="margin-bottom: 10px;">
+        <input type="password" id="new-pw-input" placeholder="새 비밀번호" style="margin-bottom: 10px;">
+        <input type="password" id="confirm-pw-input" placeholder="새 비밀번호 확인" onkeydown="if(event.key==='Enter') executePasswordChange()" style="margin-bottom: 10px;">
+        <div style="display: flex; gap: 8px; margin-top: 5px;">
+            <button onclick="executePasswordChange()" style="flex: 1; background-color: #4a90e2;">변경하기</button>
+            <button onclick="closePasswordModal()" style="flex: 1; background-color: #888;">취소</button>
+        </div>
+    </div>
+</div>
+
+<div class='top'>
+    <div class="logo">Smart Diary (<span id="current-user-badge"></span>)</div>
+    <div class="menu-group">
+        <div class="style-options">
+            🎨 효과:
+            <label><input type="checkbox" id="chk-lines" onchange="applyDiaryStyles()"> 줄노트</label>
+            <label><input type="checkbox" id="chk-paper" onchange="applyDiaryStyles()"> 종이</label>
+            <label><input type="checkbox" id="chk-ring" onchange="applyDiaryStyles()"> 링</label>
+        </div>
+        
+        <select id="font-select" onchange="changeFont()">
+            <option value="'Pretendard', 'Malgun Gothic', sans-serif">기본 고딕</option>
+            <option value="'KyoboHandwriting', sans-serif">✍️ 교보 손글씨</option>
+            <option value="'Batang', 'Gungsuh', serif">명조체</option>
+        </select>
+        <button onclick='connectFolder()' style="background-color: #4a90e2;" title="폴더 자동 동기화">📁 폴더 연결</button>
+        <button onclick='exportData()'>📦 백업(암호화)</button>
+        <button onclick='document.getElementById("import-file").click()'>📂 불러오기</button>
+        <input type='file' id="import-file" style="display:none" onchange='importData(event)'>
+        <button onclick='toggleTheme()' id='theme-btn'>🌙 다크</button>
+        <button onclick='openPasswordModal()' style="background-color: #5c7cfa;">🔑 암호 변경</button>
+        <button onclick='logoutAccount()' style="background-color: #c97a7e;">🔒 잠금/로그아웃</button>
+    </div>
+</div>
+
+<div class='layout'>
+    <div class='left'>
+        <div class="cal-container">
+            <div class="cal-header">
+                <div class="cal-title-wrapper">
+                    <h3>📅 달력</h3>
+                    <span id="current-month-display"></span>
+                </div>
+                <div class="cal-nav">
+                    <button onclick='handleCalNav("prev")'>◀</button>
+                    <button onclick='handleCalNav("next")'>▶</button>
+                </div>
+            </div>
+            <div id='calendar'></div>
+        </div>
+        <div class="chart-container">
+            <h3>📊 감정 통계</h3>
+            <div class="chart-wrapper"><canvas id='chart'></canvas></div>
+        </div>
+    </div>
+    
+    <div class='center'>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>✍️ 오늘의 기록</h2>
+            <button onclick="selectToday()" style="padding: 6px 12px; font-size: 13px;">📅 오늘</button>
+        </div>
+        <input type='date' id='date' onchange='handleDateChange()'>
+        <select id='emotion'>
+            <option value='happy'>😊 행복</option>
+            <option value='normal'>😐 보통</option>
+            <option value='sad'>😢 슬픔</option>
+        </select>
+        <textarea id='txt' placeholder='오늘 하루는 어땠나요?'></textarea>
+        <input type='file' id='photo' accept='image/*'>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+            <label><input type='checkbox' id='autoSave' checked> 자동저장 사용</label>
+            <button onclick='save()' style="padding: 10px 24px; font-size: 16px;">💾 저장하기</button>
+        </div>
+    </div>
+    
+    <div class='right'>
+        <div class="search-container">
+            <input id='search' placeholder='🔍 전체 기간 검색...' oninput='render()'>
+        </div>
+        <div id='list'></div>
+    </div>
+</div>
+
+<div class='log' id='log'>준비 완료</div>
+
+<script>
+let directoryHandle = null;
+let currentKey = null; 
+let currentUser = null;
+
+window.addEventListener('DOMContentLoaded', () => {
+    const savedFont = localStorage.getItem('diary_font');
+    if (savedFont) { document.getElementById('font-select').value = savedFont; document.getElementById('txt').style.fontFamily = savedFont; }
+
+    document.getElementById('chk-lines').checked = localStorage.getItem('diary_opt_lines') === 'true';
+    document.getElementById('chk-paper').checked = localStorage.getItem('diary_opt_paper') === 'true';
+    document.getElementById('chk-ring').checked = localStorage.getItem('diary_opt_ring') === 'true';
+    applyDiaryStyles();
+
+    calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+        initialView: 'dayGridMonth', fixedWeekCount: true, showNonCurrentDates: true, expandRows: true, headerToolbar: false, height: 'parent',
+        dateClick: i => {
+            document.getElementById('date').value = i.dateStr;
+            let target = ds().find(x => x.date === i.dateStr);
+            if(target) { txt.value = target.text; emotion.value = target.emotion; } 
+            else { txt.value = ''; emotion.value = 'happy'; }
+            edit = null; 
+        }
+    });
+    calendar.render(); 
+
+    showLoginModal();
+});
+
+function showLoginModal() {
+    currentUser = null;
+    currentKey = null;
+    document.getElementById('login-modal').style.display = 'flex';
+    document.getElementById('userid-input').value = '';
+    document.getElementById('password-input').value = '';
+    document.getElementById('userid-input').focus();
+    lg('로그인이 필요합니다.');
+}
+
+function openPasswordModal() {
+    if (!currentUser) return;
+    document.getElementById('current-pw-input').value = '';
+    document.getElementById('new-pw-input').value = '';
+    document.getElementById('confirm-pw-input').value = '';
+    document.getElementById('pw-change-msg').innerText = '현재 비밀번호와 새 비밀번호를 입력하세요.';
+    document.getElementById('pw-change-msg').style.color = 'inherit';
+    document.getElementById('password-modal').style.display = 'flex';
+    document.getElementById('current-pw-input').focus();
+}
+
+function closePasswordModal() {
+    document.getElementById('password-modal').style.display = 'none';
+}
+
+async function executePasswordChange() {
+    const currentPwInput = document.getElementById('current-pw-input').value;
+    const newPwInput = document.getElementById('new-pw-input').value;
+    const confirmPwInput = document.getElementById('confirm-pw-input').value;
+    const msg = document.getElementById('pw-change-msg');
+
+    if (!currentPwInput || !newPwInput || !confirmPwInput) {
+        msg.innerText = '모든 항목을 입력해주세요.';
+        msg.style.color = '#ef4444';
+        return;
+    }
+
+    if (newPwInput !== confirmPwInput) {
+        msg.innerText = '새 비밀번호가 일치하지 않습니다.';
+        msg.style.color = '#ef4444';
+        return;
+    }
+
+    const pwdKey = `diary_pwd_${currentUser}`;
+    const storedPwdHash = localStorage.getItem(pwdKey);
+    const currentPwHash = await hashPassword(currentPwInput);
+
+    if (currentPwHash !== storedPwdHash) {
+        msg.innerText = '현재 비밀번호가 올바르지 않습니다.';
+        msg.style.color = '#ef4444';
+        document.getElementById('current-pw-input').value = '';
+        document.getElementById('current-pw-input').focus();
+        return;
+    }
+
+    // 새 비밀번호 해시 저장 및 세션 키 업데이트
+    const newPwHash = await hashPassword(newPwInput);
+    localStorage.setItem(pwdKey, newPwHash);
+    currentKey = newPwInput;
+
+    closePasswordModal();
+    lg('비밀번호가 성공적으로 변경되었습니다.');
+    alert('비밀번호가 변경되었습니다. 기존 폴더 동기화가 활성화되어 있다면 변경된 암호로 동기화 파일이 갱신됩니다.');
+    if (directoryHandle) saveToConnectedFolder();
+}
+
+async function getCryptoKey(password, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
+    );
+    return await window.crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+    );
+}
+
+async function encryptData(secretData, password) {
+    const enc = new TextEncoder();
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const key = await getCryptoKey(password, salt);
+    const encryptedContent = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        enc.encode(JSON.stringify(secretData))
+    );
+    
+    const combined = new Uint8Array(salt.byteLength + iv.byteLength + encryptedContent.byteLength);
+    combined.set(salt, 0);
+    combined.set(iv, salt.byteLength);
+    combined.set(new Uint8Array(encryptedContent), salt.byteLength + iv.byteLength);
+    return combined;
+}
+
+async function decryptData(combinedBuffer, password) {
+    try {
+        const salt = combinedBuffer.slice(0, 16);
+        const iv = combinedBuffer.slice(16, 28);
+        const data = combinedBuffer.slice(28);
+        const key = await getCryptoKey(password, salt);
+        const decryptedContent = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv },
+            key,
+            data
+        );
+        const dec = new TextDecoder();
+        return JSON.parse(dec.decode(decryptedContent));
+    } catch (e) {
+        throw new Error('복호화 실패 (비밀번호 오류)');
+    }
+}
+
+async function handleAuthAction() {
+    const inputId = document.getElementById('userid-input').value.trim();
+    const inputPwd = document.getElementById('password-input').value;
+    const msg = document.getElementById('login-msg');
+
+    if (!inputId || !inputPwd) {
+        msg.innerText = 'ID와 비밀번호를 모두 입력해주세요!';
+        msg.style.color = '#ef4444';
+        return;
+    }
+
+    const pwdKey = `diary_pwd_${inputId}`;
+    const storedPwdHash = localStorage.getItem(pwdKey);
+    const inputPwdHash = await hashPassword(inputPwd);
+
+    if (!storedPwdHash) {
+        localStorage.setItem(pwdKey, inputPwdHash);
+        currentUser = inputId;
+        currentKey = inputPwd;
+        
+        document.getElementById('login-modal').style.display = 'none';
+        document.getElementById('current-user-badge').textContent = currentUser;
+        lg(`[${inputId}] 새 계정이 등록되고 로그인되었습니다.`);
+        selectToday(); draw(); render();
+    } else {
+        if (inputPwdHash === storedPwdHash) {
+            currentUser = inputId;
+            currentKey = inputPwd;
+            
+            document.getElementById('login-modal').style.display = 'none';
+            document.getElementById('current-user-badge').textContent = currentUser;
+            lg(`[${currentUser}]님 환영합니다.`);
+            selectToday(); draw(); render();
+        } else {
+            msg.innerText = '비밀번호가 일치하지 않습니다.';
+            msg.style.color = '#ef4444';
+            document.getElementById('password-input').value = '';
+            document.getElementById('password-input').focus();
+        }
+    }
+}
+
+function logoutAccount() {
+    showLoginModal();
+}
+
+async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function connectFolder() {
+    if (!window.showDirectoryPicker) {
+        alert('현재 브라우저가 폴더 연결 API를 지원하지 않습니다.');
+        return;
+    }
+    try {
+        directoryHandle = await window.showDirectoryPicker();
+        lg(`폴더 연결 성공: ${directoryHandle.name}`);
+        alert(`"${directoryHandle.name}" 폴더가 연결되었습니다.`);
+        await saveToConnectedFolder();
+    } catch (err) {
+        if (err.name !== 'AbortError') console.error(err);
+    }
+}
+
+async function saveToConnectedFolder() {
+    if (!directoryHandle || !currentKey || !currentUser) return;
+    try {
+        const fileName = `SmartDiary_${currentUser}.json`;
+        const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        
+        const rawData = {
+            user: currentUser,
+            exportDate: new Date().toISOString(),
+            diaries: JSON.parse(localStorage.getItem(`diaries_${currentUser}`) || '[]')
+        };
+        
+        const encryptedData = await encryptData(rawData, currentKey);
+        await writable.write(encryptedData);
+        await writable.close();
+        lg('연결된 폴더에 암호화된 파일 자동 동기화 완료');
+    } catch (err) {
+        console.error(err);
+        lg('폴더 동기화 저장 실패');
+    }
+}
+
+function changeFont() {
+    const selectedFont = document.getElementById('font-select').value;
+    document.getElementById('txt').style.fontFamily = selectedFont;
+    localStorage.setItem('diary_font', selectedFont);
+}
+
+function applyDiaryStyles() {
+    const txtArea = document.getElementById('txt');
+    const lines = document.getElementById('chk-lines').checked;
+    const paper = document.getElementById('chk-paper').checked;
+    const ring = document.getElementById('chk-ring').checked;
+
+    if (lines) txtArea.classList.add('opt-lines'); else txtArea.classList.remove('opt-lines');
+    if (paper) txtArea.classList.add('opt-paper'); else txtArea.classList.remove('opt-paper');
+    if (ring) txtArea.classList.add('opt-ring'); else txtArea.classList.remove('opt-ring');
+
+    localStorage.setItem('diary_opt_lines', lines);
+    localStorage.setItem('diary_opt_paper', paper);
+    localStorage.setItem('diary_opt_ring', ring);
+}
+
+let calendar, chart, edit = null;
+let autoSaveTimeout = null;
+
+function lg(x) { log.textContent = x }
+function ds() { 
+    if (!currentUser) return [];
+    let data = JSON.parse(localStorage.getItem(`diaries_${currentUser}`) || '[]');
+    return data.sort((a, b) => b.date.localeCompare(a.date));
+}
+function sds(d) { 
+    if (!currentUser) return;
+    localStorage.setItem(`diaries_${currentUser}`, JSON.stringify(d));
+    if (directoryHandle) saveToConnectedFolder();
+}
+function emo(e) { return e === 'happy' ? '😊' : e === 'normal' ? '😐' : '😢' }
+function col(e) { return e === 'happy' ? '#a3b899' : e === 'normal' ? '#addeee' : '#eebbbf' }
+
+function auto() { 
+    if (!autoSave.checked || !currentUser) return; 
+    if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(() => { save(true); }, 1000);
+}
+
+txt.addEventListener('input', auto);
+emotion.addEventListener('change', auto);
+
+function selectToday() {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    document.getElementById('date').value = todayStr;
+    if (calendar) { calendar.gotoDate(today); updateMonthLabel(false); }
+    handleDateChange();
+}
+
+function clearDisplayForm() {
+    document.getElementById('date').value = '';
+    document.getElementById('emotion').value = 'happy';
+    document.getElementById('txt').value = '';
+    document.getElementById('photo').value = '';
+    edit = null;
+}
+
+function save(isSilent = false) {
+    if (!date.value || !currentUser) return; 
+    let d = JSON.parse(localStorage.getItem(`diaries_${currentUser}`) || '[]');
+    let currentText = txt.value;
+    let currentEmotion = emotion.value;
+
+    if (!isSilent && !currentText.trim()) return;
+
+    let existingIndex = d.findIndex(x => x.date === date.value);
+    let rec = { date: date.value, text: currentText, emotion: currentEmotion, image: null };
+    
+    const fin = i => {
+        rec.image = i;
+        if (edit !== null) { 
+            let sortedData = ds();
+            let targetDate = sortedData[edit].date;
+            let realIndex = d.findIndex(x => x.date === targetDate);
+            if (realIndex !== -1) d[realIndex] = rec;
+        } 
+        else if (existingIndex !== -1) { d[existingIndex] = rec; } 
+        else { d.push(rec); }
+        
+        sds(d); render(); draw(); events();
+        if (!isSilent) { edit = null; lg('일기가 저장되었습니다.'); } 
+        else { lg('실시간 자동저장 완료'); }
+    };
+    
+    let f = photo.files[0];
+    if (f) {
+        let r = new FileReader();
+        r.onload = e => fin(e.target.result);
+        r.readAsDataURL(f);
+    } else {
+        let sortedData = ds();
+        let baseIndex = (edit !== null) ? d.findIndex(x => x.date === sortedData[edit].date) : existingIndex;
+        if(baseIndex !== -1 && d[baseIndex] && d[baseIndex].image) { fin(d[baseIndex].image); } 
+        else { fin(null); }
+    }
+}
+
+function render() {
+    if (!calendar || !currentUser) return;
+    let k = search.value.toLowerCase().trim();
+    const currentPeriod = calendar.getDate();
+    const currentYearMonth = `${currentPeriod.getFullYear()}-${String(currentPeriod.getMonth() + 1).padStart(2, '0')}`;
+    
+    list.innerHTML = '';
+    ds().forEach((x, i) => {
+        const textMatch = x.text.toLowerCase().includes(k);
+        const dateMatch = x.date.includes(k);
+        if (k !== '' ? (textMatch || dateMatch) : x.date.startsWith(currentYearMonth)) {
+            appendToList(x, i);
+        }
+    });
+}
+
+function appendToList(x, i) {
+    list.innerHTML += `
+        <div class="entry">
+            <div style="display:flex; justify-content:space-between;">
+                <b>${x.date}</b> <span>${emo(x.emotion)}</span>
+            </div>
+            <p style="margin: 8px 0; white-space: pre-wrap; line-height:1.4;">${x.text}</p>
+            ${x.image ? '<img src="' + x.image + '">' : ''}
+            <div class="btn-group">
+                <button onclick='ed(${i})'>수정</button>
+                <button onclick='delr(${i})' style="background-color:#c97a7e;">삭제</button>
+            </div>
+        </div>`;
+}
+
+function ed(i) {
+    let x = ds()[i];
+    edit = i;
+    date.value = x.date;
+    txt.value = x.text;
+    emotion.value = x.emotion;
+    lg('수정 모드 활성화');
+}
+
+function handleDateChange() {
+    let target = ds().find(x => x.date === date.value);
+    if(target) { txt.value = target.text; emotion.value = target.emotion; } 
+    else { txt.value = ''; emotion.value = 'happy'; }
+    edit = null;
+    draw(); 
+}
+
+function delr(i) {
+    if(!confirm("정말 삭제하시겠습니까?")) return;
+    let sortedData = ds();
+    let targetDate = sortedData[i].date;
+    let d = JSON.parse(localStorage.getItem(`diaries_${currentUser}`) || '[]');
+    let realIndex = d.findIndex(x => x.date === targetDate);
+    if (realIndex !== -1) { d.splice(realIndex, 1); sds(d); }
+    edit = null;
+    render(); draw(); events();
+    lg('일기가 삭제되었습니다.');
+}
+
+function events() {
+    if(!calendar || !currentUser) return;
+    calendar.removeAllEvents();
+    ds().forEach(x => { calendar.addEvent({ title: emo(x.emotion), start: x.date, color: col(x.emotion) }); });
+}
+
+function draw() {
+    if (!currentUser) return;
+    let h = 0, n = 0, s = 0;
+    ds().forEach(x => x.emotion === 'happy' ? h++ : x.emotion === 'normal' ? n++ : s++);
+    if (chart) chart.destroy();
+    
+    const isDark = document.body.classList.contains('dark');
+    const ctx = document.getElementById('chart');
+    if (!ctx) return;
+
+    chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['행복', '보통', '슬픔'],
+            datasets: [{ data: [h, n, s], backgroundColor: ['#a3b899', '#93b5e1', '#eebbbf'], borderWidth: 0 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: isDark ? '#e5e1dc' : '#333333', boxWidth: 10, padding: 4 } } }
+        }
+    });
+}
+
+function updateMonthLabel(shouldClear = true) {
+    if (!calendar) return;
+    const currentPeriod = calendar.getDate();
+    document.getElementById('current-month-display').textContent = `${currentPeriod.getFullYear()}년 ${String(currentPeriod.getMonth() + 1).padStart(2, '0')}월`;
+    if (shouldClear) clearDisplayForm();
+    events(); render();
+}
+
+function handleCalNav(action) {
+    if(action === 'prev') calendar.prev();
+    else if(action === 'next') calendar.next();
+    updateMonthLabel(true);
+}
+
+async function exportData() {
+    if (!currentKey || !currentUser) return;
+    const rawData = { user: currentUser, exportDate: new Date().toISOString(), diaries: JSON.parse(localStorage.getItem(`diaries_${currentUser}`) || '[]') };
+
+    const encryptedData = await encryptData(rawData, currentKey);
+    const blob = new Blob([encryptedData], { type: 'application/octet-stream' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `SmartDiary_${currentUser}.json`;
+    a.click();
+    lg('암호화된 백업 파일 다운로드 완료');
+}
+
+function importData(e) {
+    const f = e.target.files[0]; if (!f || !currentUser) return;
+    const r = new FileReader();
+    r.onload = async v => {
+        try {
+            const arrayBuffer = v.target.result;
+            const decrypted = await decryptData(arrayBuffer, currentKey);
+            if (decrypted && decrypted.diaries) {
+                localStorage.setItem(`diaries_${currentUser}`, JSON.stringify(decrypted.diaries));
+                render(); draw(); events(); updateMonthLabel(false);
+                lg('암호화된 데이터를 성공적으로 불러왔습니다.');
+            } else {
+                alert('지원하지 않는 형식입니다.');
+            }
+        } catch (err) {
+            alert('복호화에 실패했습니다. 올바른 계정 비밀번호이거나 올바른 백업 파일인지 확인해주세요.');
+        }
+    };
+    r.readAsArrayBuffer(f);
+}
+
+function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark');
+    document.getElementById('theme-btn').textContent = isDark ? '☀️ 라이트' : '🌙 다크';
+    draw();
+}
+</script>
+</body>
+</html>
