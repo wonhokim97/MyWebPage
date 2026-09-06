@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>출장검사 일정 관리 시스템</title>
+    <!-- Tailwind CSS & FontAwesome Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {}
+            }
+        }
+    </script>
+    <style>
+        /* 미세 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+        /* 달력 인쇄 전용 CSS 스타일 정의 */
+        @media print {
+            body { background: white !important; color: black !important; }
+            header, aside, footer, .no-print { display: none !important; }
+            main { padding: 0 !important; margin: 0 !important; width: 100% !important; height: auto !important; overflow: visible !important; }
+            #calendar-grid { overflow: visible !important; height: auto !important; display: grid !important; gap: 4px !important; }
+            .bg-white { background-color: #ffffff !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .bg-indigo-50 { background-color: #e0e7ff !important; }
+            .text-indigo-700 { color: #4338ca !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200 h-screen flex flex-col overflow-hidden">
+
+    <!-- 상단 헤더: 입체적인 딥 인디고 그라데이션 및 로컬 폴더 제어반 통합 배치 -->
+    <header class="flex justify-between items-center px-6 py-3.5 bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 text-white border-b-2 border-indigo-500 shrink-0 shadow-lg z-10 no-print">
+        <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-calendar-check text-indigo-400 text-2xl drop-shadow-[0_2px_8px_rgba(99,102,241,0.4)]"></i>
+            <h1 class="text-lg font-bold tracking-tight drop-shadow-sm">출장검사 일정 시스템</h1>
+        </div>
+        
+        <!-- 헤더 제어 기능 그룹 (로컬폴더 연동 -> 화면모드 설정 단추 순 배치) -->
+        <div class="flex items-center space-x-5">
+            <!-- 로컬 폴더 자동 저장 연동 영역 (헤더 탑재용 컴팩트 뷰) -->
+            <div id="folder-status-area" class="flex items-center">
+                <!-- JS에 의해 상태별 UI 동적 렌더링 -->
+            </div>
+            <button onclick="openGitHubModal()" class="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 text-slate-300 hover:text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all" title="GitHub 저장소 연결">
+                <i class="fa-brands fa-github mr-1"></i>GitHub 저장
+            </button>
+
+            <!-- 화면 제어 메뉴 (아이콘 + 메뉴명 탑재) -->
+            <div class="flex items-center space-x-2">
+                <!-- 테마 토글 (라이트/다크) -->
+                <button onclick="toggleTheme()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 text-slate-300 hover:text-white text-xs font-semibold transition-all shadow-inner active:scale-95" title="테마 변경">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                    <span id="theme-text">다크 모드</span>
+                </button>
+                <!-- 전체화면 토글 -->
+                <button onclick="toggleFullscreen()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 text-slate-300 hover:text-white text-xs font-semibold transition-all shadow-inner active:scale-95" title="전체화면">
+                    <i id="fullscreen-icon" class="fa-solid fa-expand"></i>
+                    <span id="fullscreen-text">전체화면</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 레이아웃 (좌/중/우 3단 구성) -->
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- [좌측 패널] 전체 스크롤 완전 차단 (부드러운 내부 쉐도우 및 입체 카드형 폼) -->
+        <aside class="w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-4 flex flex-col space-y-4 overflow-hidden shrink-0 no-print shadow-md">
+            <!-- 일정 등록 영역 -->
+            <div class="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
+                <h2 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
+                    <i class="fa-regular fa-square-plus text-indigo-500"></i>
+                    <span>일정 등록</span>
+                </h2>
+                <div class="space-y-2">
+                    <div>
+                        <label class="block text-[10px] font-bold mb-0.5 text-slate-500 dark:text-slate-400">외주사 선택</label>
+                        <select id="schedule-company" class="w-full text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none shadow-xs transition-shadow"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold mb-0.5 text-slate-500 dark:text-slate-400">출장검사자 선택</label>
+                        <select id="schedule-inspector" class="w-full text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none shadow-xs transition-shadow"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold mb-0.5 text-slate-500 dark:text-slate-400">검사 PJT</label>
+                        <select id="schedule-pjt" class="w-full text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none shadow-inner transition-shadow"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold mb-0.5 text-slate-500 dark:text-slate-400">출장 일자</label>
+                        <input type="date" id="schedule-date" class="w-full text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none shadow-inner transition-shadow">
+                    </div>
+                    <button onclick="saveSchedule()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 rounded-lg transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-md">
+                        일정 등록
+                    </button>
+                </div>
+            </div>
+
+            <!-- 기준정보 관리는 전용 팝업에서 관리 -->
+            <div class="border-t border-slate-200 dark:border-slate-800 pt-3 space-y-2">
+                <h2 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-sliders text-indigo-500"></i><span>기준정보 관리</span>
+                </h2>
+                <button onclick="openManagerModal('company')" class="w-full flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:text-indigo-600 transition-all text-xs font-semibold">
+                    <span><i class="fa-solid fa-industry mr-2 text-indigo-500"></i>외주사 관리</span><i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+                <button onclick="openManagerModal('inspector')" class="w-full flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:text-indigo-600 transition-all text-xs font-semibold">
+                    <span><i class="fa-solid fa-user-gear mr-2 text-indigo-500"></i>검사자 관리</span><i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+                <button onclick="openManagerModal('pjt')" class="w-full flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:text-indigo-600 transition-all text-xs font-semibold">
+                    <span><i class="fa-solid fa-folder-tree mr-2 text-indigo-500"></i>검사 PJT 관리</span><i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- [중앙 패널] 아웃룩형 월간 달력 -->
+        <main class="flex-1 flex flex-col p-5 overflow-hidden">
+            <!-- 달력 컨트롤 및 년월 표시 중앙 배치 -->
+            <div class="flex justify-center items-center mb-3 shrink-0 w-full relative">
+                
+                <!-- 중앙에 완벽히 정렬된 일정 내비게이션 -->
+                <div class="flex items-center space-x-2 bg-white dark:bg-slate-900 px-4 py-1.5 rounded-full border border-slate-200/60 dark:border-slate-800/80 shadow-md">
+                    <button onclick="prevMonth()" class="p-1 px-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white transition-all text-xs shadow-xs active:scale-95" title="이전달">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button onclick="goToday()" class="px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white transition-all text-[11px] font-bold active:scale-95">오늘</button>
+                    <h2 id="calendar-title" class="text-lg font-extrabold tracking-tight text-slate-800 dark:text-slate-100 text-center px-4 min-w-[140px]">2026년 07월</h2>
+                    <button onclick="nextMonth()" class="p-1 px-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white transition-all text-xs shadow-xs active:scale-95" title="다음달">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- 우측 인쇄 및 엑셀 저장 버튼 그룹 -->
+                <div class="absolute right-0 flex space-x-1.5 no-print">
+                    <button onclick="printCalendar()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg flex items-center space-x-1 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all" title="달력 출력">
+                        <i class="fa-solid fa-print text-[10px]"></i>
+                        <span>인쇄</span>
+                    </button>
+                    <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg flex items-center space-x-1 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all" title="일정 엑셀 파일 다운로드">
+                        <i class="fa-solid fa-file-excel text-[10px]"></i>
+                        <span>Excel 저장</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 달력 본체 그리드 -->
+            <div class="flex-1 flex flex-col bg-slate-200/60 dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-2xl overflow-hidden shadow-lg p-1.5">
+                <!-- 요일 표시 헤더 -->
+                <div class="grid grid-cols-7 text-center text-xs font-bold py-2 shrink-0 text-slate-600 dark:text-slate-400">
+                    <div class="text-rose-500 drop-shadow-sm">일</div>
+                    <div class="drop-shadow-sm">월</div>
+                    <div class="drop-shadow-sm">화</div>
+                    <div class="drop-shadow-sm">수</div>
+                    <div class="drop-shadow-sm">목</div>
+                    <div class="drop-shadow-sm">금</div>
+                    <div class="text-blue-500 drop-shadow-sm">토</div>
+                </div>
+                <!-- 날짜 셀 영역 -->
+                <div id="calendar-grid" class="grid grid-cols-7 flex-1 gap-1.5 overflow-y-auto">
+                    <!-- JS에 의해 동적 렌더링 -->
+                </div>
+            </div>
+        </main>
+
+        <!-- [우측 패널] 검색 및 검색 결과 목록 -->
+        <aside class="w-80 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 p-4 flex flex-col overflow-hidden shrink-0 no-print shadow-md">
+            <h2 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
+                <i class="fa-solid fa-magnifying-glass text-indigo-500"></i><span>출장일정 검색</span>
+            </h2>
+            <div class="grid grid-cols-2 gap-1 mb-2 shrink-0 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                <button id="search-scope-month" onclick="setSearchScope('month')" class="text-[11px] font-bold py-1.5 rounded-md bg-white dark:bg-slate-700 text-indigo-600 shadow-sm">해당월</button>
+                <button id="search-scope-all" onclick="setSearchScope('all')" class="text-[11px] font-bold py-1.5 rounded-md text-slate-500 dark:text-slate-400">전체</button>
+            </div>
+            <p id="search-scope-label" class="text-[10px] text-slate-400 mb-2 shrink-0"></p>
+            <div class="relative mb-3 shrink-0">
+                <input type="text" id="search-input" oninput="searchSchedules()" placeholder="외주사, 검사자, PJT명 검색" class="w-full text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg pl-7 pr-3 py-1.5 outline-none shadow-inner focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+            </div>
+            <div class="flex-1 overflow-y-auto space-y-2 pr-0.5" id="search-results"></div>
+        </aside>
+    </div>
+
+    <!-- 일정 편집 모달 레이어 -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 transition-opacity duration-200 no-print">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-2xl w-80 border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">출장 일정 상세 수정</h3>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <input type="hidden" id="edit-schedule-id">
+            <div class="space-y-3 text-xs mb-5">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">외주사</label>
+                    <select id="edit-schedule-company" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded p-1.5 focus:ring-2 focus:ring-indigo-500 outline-none shadow-xs"></select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">출장검사자</label>
+                    <select id="edit-schedule-inspector" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded p-1.5 focus:ring-2 focus:ring-indigo-500 outline-none shadow-xs"></select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">검사 PJT</label>
+                    <select id="edit-schedule-pjt" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded p-1.5 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"></select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">출장 일자</label>
+                    <input type="date" id="edit-schedule-date" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded p-1.5 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-1.5">
+                <button onclick="closeEditModal()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs">취소</button>
+                <button onclick="updateSchedule()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded text-xs shadow-md">변경사항 저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 외주사 · 검사자 · 검사 PJT 관리 팝업 -->
+    <div id="manager-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 no-print">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-2xl w-[420px] max-w-[calc(100vw-2rem)] border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="manager-title" class="text-base font-bold">기준정보 관리</h3>
+                <button onclick="closeManagerModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="flex gap-2 mb-3">
+                <input id="manager-input" type="text" onkeydown="if(event.key==='Enter') saveManagerItem()" placeholder="명칭 입력" class="flex-1 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                <button id="manager-save-btn" onclick="saveManagerItem()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg">추가</button>
+                <button id="manager-cancel-btn" onclick="resetManagerForm()" class="hidden text-xs font-bold px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg">취소</button>
+            </div>
+            <div id="manager-list" class="max-h-[320px] overflow-y-auto space-y-1 pr-1"></div>
+        </div>
+    </div>
+
+    <!-- GitHub 저장소 연결 팝업 -->
+    <div id="github-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 no-print">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-2xl w-[440px] max-w-[calc(100vw-2rem)] border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-bold">GitHub에 데이터 저장</h3>
+                <button onclick="closeGitHubModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Personal Access Token은 이 브라우저에만 저장됩니다. Contents: Read and write 권한이 필요합니다.</p>
+            <div class="space-y-2 text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <input id="github-owner" value="wonhokim97" placeholder="소유자" class="bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 outline-none">
+                    <input id="github-repo" value="MyWebPage" placeholder="저장소" class="bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input id="github-branch" value="main" placeholder="브랜치" class="bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 outline-none">
+                    <input id="github-path" value="data.json" placeholder="파일 경로" class="bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 outline-none">
+                </div>
+                <input id="github-token" type="password" placeholder="GitHub Personal Access Token" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 outline-none">
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="disconnectGitHub()" class="px-3 py-1.5 text-xs text-rose-600 border border-rose-200 rounded-lg">연결 해제</button>
+                <button onclick="saveGitHubSettings()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold">연결 및 저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 최하단 로그 바 -->
+    <footer class="h-8 bg-slate-200 dark:bg-slate-950 border-t border-slate-300 dark:border-slate-800/80 px-4 flex items-center shrink-0 no-print shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
+        <div class="text-[11px] text-slate-600 dark:text-slate-400 truncate flex items-center space-x-2 w-full">
+            <span class="inline-flex items-center justify-center bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 shadow-xs border border-emerald-200 dark:border-emerald-900/30">System Log</span>
+            <span id="log-text" class="truncate font-mono font-medium">연동 상태를 구성하는 중...</span>
+        </div>
+    </footer>
+
+    <!-- 비즈니스 로직 스크립트 -->
+    <script>
+        // 전역 데이터 선언
+        let companies = [];
+        let inspectors = [];
+        let pjts = [];
+        let schedules = [];
+        let searchScope = 'month';
+        let activeManager = null;
+        let editingManagerIndex = null;
+        let dirHandle = null;
+        // 폴더 핸들이 존재하더라도 사용자가 권한을 승인하기 전에는 폴더에 쓰지 않습니다.
+        let folderConnected = false;
+        let githubSyncing = false;
+        const GITHUB_SETTINGS_KEY = 'githubDataSyncSettings';
+
+        // 대한민국 기념일 및 국경일 (2026년 기준)
+        const holidays = {
+            "01-01": "신정", "03-01": "삼일절", "04-03": "제주 4·3 추념일", "04-16": "세월호 참사 추념일",
+            "04-19": "4·19 혁명일", "05-01": "근로자의 날", "05-05": "어린이날", "05-08": "어버이날",
+            "05-15": "스승의 날", "05-18": "5·18 민주화운동 기념일", "06-06": "현충일", "07-17": "제헌절",
+            "08-15": "광복절", "10-01": "국군의 날", "10-03": "개천절", "10-09": "한글날", "12-25": "성탄절",
+
+            "2026-02-15": "설날 연휴", "2026-02-16": "설날 연휴", "2026-02-17": "설날", "2026-02-18": "설날 연휴",
+            "2026-03-02": "삼일절 대체공휴일", "2026-05-24": "부처님 오신 날", "2026-05-25": "부처님 대체공휴일",
+            "2026-06-03": "지방선거일", "2026-08-17": "광복절 대체공휴일", "2026-09-23": "추석 연휴",
+            "2026-09-24": "추석 연휴", "2026-09-25": "추석", "2026-09-26": "추석 연휴", "2026-09-27": "추석 연휴",
+            "2026-10-05": "개천절 대체공휴일"
+        };
+
+        // [추가 구현] 검사자별 고유 테마 6가지 프리셋 매핑 함수
+        function getInspectorColorClasses(name) {
+            const colorPalettes = [
+                // 1. Blue (파랑)
+                'bg-blue-50/90 text-blue-700 border-blue-100/80 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-900/50',
+                // 2. Emerald (초록)
+                'bg-emerald-50/90 text-emerald-700 border-emerald-100/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50',
+                // 3. Orange (오렌지/황토)
+                'bg-amber-50/90 text-amber-700 border-amber-100/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/50',
+                // 4. Purple (보라)
+                'bg-purple-50/90 text-purple-700 border-purple-100/80 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-900/40 hover:bg-purple-100 dark:hover:bg-purple-900/50',
+                // 5. Rose (장미/빨강)
+                'bg-rose-50/90 text-rose-700 border-rose-100/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/40 hover:bg-rose-100 dark:hover:bg-rose-900/50',
+                // 6. Cyan (하늘/청록)
+                'bg-cyan-50/90 text-cyan-700 border-cyan-100/80 dark:bg-cyan-950/40 dark:text-cyan-300 dark:border-cyan-900/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/50'
+            ];
+            
+            let idx = inspectors.indexOf(name);
+            if (idx === -1) {
+                // 검사자 목록에 없는 임의 이름인 경우 문자열 해싱값으로 일관성 있는 색상 결정
+                let hash = 0;
+                for (let i = 0; i < name.length; i++) {
+                    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                idx = Math.abs(hash) % colorPalettes.length;
+            } else {
+                idx = idx % colorPalettes.length;
+            }
+            return colorPalettes[idx];
+        }
+
+        // [추가 구현] 관리 리스트용 색상 점(Dot) 컬러맵
+        const dotColors = [
+            'bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-purple-500', 'bg-rose-500', 'bg-cyan-500'
+        ];
+
+        const initialToday = new Date();
+        let currentYear = initialToday.getFullYear();
+        let currentMonth = initialToday.getMonth(); // 실행 시점의 오늘 월
+
+        function getHoliday(dateString) {
+            if (holidays[dateString]) return holidays[dateString];
+            const mmDd = dateString.substring(5);
+            return holidays[mmDd] || null;
+        }
+
+        function addLog(message) {
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ');
+            document.getElementById('log-text').innerText = `[${timeStr[0]}] ${message}`;
+        }
+
+        // IndexedDB 로컬 폴더 핸들 동기화 로직
+        const DB_NAME = "LocalFolderSyncDB";
+        const STORE_NAME = "settings";
+        const KEY_NAME = "savedDirectoryHandle";
+
+        function getIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onupgradeneeded = (e) => {
+                    e.target.result.createObjectStore(STORE_NAME);
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function saveHandleToDB(handle) {
+            const db = await getIndexedDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, "readwrite");
+                tx.objectStore(STORE_NAME).put(handle, KEY_NAME);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function getHandleFromDB() {
+            const db = await getIndexedDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, "readonly");
+                const req = tx.objectStore(STORE_NAME).get(KEY_NAME);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function verifyPermission(fileHandle, readWrite) {
+            const options = {};
+            if (readWrite) options.mode = 'readwrite';
+            if ((await fileHandle.queryPermission(options)) === 'granted') return true;
+            if ((await fileHandle.requestPermission(options)) === 'granted') return true;
+            return false;
+        }
+
+        async function connectFolder() {
+            try {
+                const selectedHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                dirHandle = selectedHandle;
+                folderConnected = false;
+                await saveHandleToDB(dirHandle);
+                await initFolderData();
+            } catch (e) {
+                if (e.name !== 'AbortError') {
+                    alert("로컬 폴더를 연결할 수 없습니다. 크롬/엣지 브라우저를 활용하고 있는지 확인해 주세요.");
+                }
+            }
+        }
+
+        async function tryAutoReconnect() {
+            try {
+                const savedHandle = await getHandleFromDB();
+                if (savedHandle) {
+                    dirHandle = savedHandle;
+                    folderConnected = false;
+                    updateFolderUI('pending');
+                    addLog("이전에 연결된 작업 폴더를 감지했습니다. 상단 [🔓 승인]을 누르면 동기화됩니다.");
+                } else {
+                    updateFolderUI('disconnected');
+                }
+            } catch (e) {
+                folderConnected = false;
+                updateFolderUI('disconnected');
+            }
+        }
+
+        async function approveReconnect() {
+            if (!dirHandle) return;
+            try {
+                const granted = await verifyPermission(dirHandle, true);
+                if (granted) {
+                    await initFolderData();
+                } else {
+                    folderConnected = false;
+                    addLog("보안 권한 거부. 브라우저 저장 모드로 계속 동작합니다.");
+                    updateFolderUI('disconnected');
+                }
+            } catch (e) {
+                folderConnected = false;
+                addLog("보안 연동 실패. 폴더를 재선택해야 합니다.");
+                updateFolderUI('disconnected');
+            }
+        }
+
+        async function initFolderData() {
+            try {
+                const fileHandle = await dirHandle.getFileHandle('data.json', { create: true });
+                const file = await fileHandle.getFile();
+                const fileText = await file.text();
+
+                if (fileText.trim()) {
+                    // 폴더에 기존 데이터가 있으면 폴더 데이터를 기준으로 불러옵니다.
+                    const data = JSON.parse(fileText);
+                    companies = data.companies || ["삼성전자", "LG화학", "SK하이닉스"];
+                    inspectors = data.inspectors || ["홍길동 과장", "이몽룡 대리", "성춘향 주임"];
+                    schedules = data.schedules || [];
+                    pjts = data.pjts || [...new Set(schedules.map(s => (s.pjt || '').trim()).filter(Boolean))];
+                    folderConnected = true;
+                    saveLocalDatabase();
+                    addLog("폴더 자동 저장 활성화 ('" + dirHandle.name + "' 연동됨)");
+                } else {
+                    // 빈 data.json에는 승인 전 브라우저에 작성한 데이터를 그대로 저장합니다.
+                    // 기존 작성 데이터를 초기화하지 않으므로 일정이 사라지지 않습니다.
+                    folderConnected = true;
+                    await saveDatabase();
+                    addLog("기존 작성 데이터를 '" + dirHandle.name + "/data.json'에 저장했습니다.");
+                }
+
+                updateFolderUI('connected');
+                sortCompanies();
+                sortPjts();
+                updateBasicLists();
+                renderCalendar();
+                searchSchedules();
+            } catch (e) {
+                folderConnected = false;
+                console.error(e);
+                addLog("폴더를 매핑하는 중에 로딩 오류가 발생했습니다.");
+                updateFolderUI('disconnected');
+            }
+        }
+
+        async function loadFallbackData() {
+            const lCompanies = localStorage.getItem('co_db');
+            const lInspectors = localStorage.getItem('ins_db');
+            const lSchedules = localStorage.getItem('sch_db');
+
+            companies = lCompanies ? JSON.parse(lCompanies) : ["삼성전자", "LG화학", "SK하이닉스"];
+            inspectors = lInspectors ? JSON.parse(lInspectors) : ["홍길동 과장", "이몽룡 대리", "성춘향 주임"];
+            schedules = lSchedules ? JSON.parse(lSchedules) : [];
+            const lPjts = localStorage.getItem('pjt_db');
+            pjts = lPjts ? JSON.parse(lPjts) : [...new Set(schedules.map(s => (s.pjt || '').trim()).filter(Boolean))];
+
+            sortCompanies();
+            sortPjts();
+            updateBasicLists();
+            renderCalendar();
+            searchSchedules();
+            addLog("출장검사 관리 프로그램이 초기화되었습니다.");
+        }
+
+        // 폴더 연결 여부와 관계없이 브라우저에도 항상 백업합니다.
+        function saveLocalDatabase() {
+            localStorage.setItem('co_db', JSON.stringify(companies));
+            localStorage.setItem('ins_db', JSON.stringify(inspectors));
+            localStorage.setItem('pjt_db', JSON.stringify(pjts));
+            localStorage.setItem('sch_db', JSON.stringify(schedules));
+        }
+
+        function getGitHubSettings() {
+            try {
+                return JSON.parse(localStorage.getItem(GITHUB_SETTINGS_KEY) || 'null');
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function openGitHubModal() {
+            const settings = getGitHubSettings();
+            if (settings) {
+                document.getElementById('github-owner').value = settings.owner;
+                document.getElementById('github-repo').value = settings.repo;
+                document.getElementById('github-branch').value = settings.branch;
+                document.getElementById('github-path').value = settings.path;
+                document.getElementById('github-token').value = settings.token;
+            }
+            document.getElementById('github-modal').classList.remove('hidden');
+        }
+
+        function closeGitHubModal() {
+            document.getElementById('github-modal').classList.add('hidden');
+        }
+
+        function disconnectGitHub() {
+            localStorage.removeItem(GITHUB_SETTINGS_KEY);
+            closeGitHubModal();
+            addLog('GitHub 저장소 연결을 해제했습니다.');
+        }
+
+        async function saveGitHubSettings() {
+            const settings = {
+                owner: document.getElementById('github-owner').value.trim(),
+                repo: document.getElementById('github-repo').value.trim(),
+                branch: document.getElementById('github-branch').value.trim() || 'main',
+                path: document.getElementById('github-path').value.trim() || 'data.json',
+                token: document.getElementById('github-token').value.trim()
+            };
+            if (!settings.owner || !settings.repo || !settings.token) {
+                alert('소유자, 저장소, Personal Access Token을 입력해 주세요.');
+                return;
+            }
+            localStorage.setItem(GITHUB_SETTINGS_KEY, JSON.stringify(settings));
+            closeGitHubModal();
+            await syncToGitHub(settings);
+        }
+
+        function encodeBase64Utf8(value) {
+            const bytes = new TextEncoder().encode(value);
+            let binary = '';
+            bytes.forEach(byte => { binary += String.fromCharCode(byte); });
+            return btoa(binary);
+        }
+
+        async function syncToGitHub(settings = getGitHubSettings()) {
+            if (!settings || githubSyncing) return;
+            githubSyncing = true;
+            const apiUrl = `https://api.github.com/repos/${encodeURIComponent(settings.owner)}/${encodeURIComponent(settings.repo)}/contents/${settings.path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(settings.branch)}`;
+            try {
+                const currentResponse = await fetch(apiUrl, { headers: { Authorization: `Bearer ${settings.token}`, Accept: 'application/vnd.github+json' } });
+                let sha;
+                if (currentResponse.ok) sha = (await currentResponse.json()).sha;
+                else if (currentResponse.status !== 404) throw new Error(`GitHub 파일 조회 실패 (${currentResponse.status})`);
+
+                const payload = JSON.stringify({ companies, inspectors, pjts, schedules }, null, 2);
+                const response = await fetch(apiUrl.split('?')[0], {
+                    method: 'PUT',
+                    headers: { Authorization: `Bearer ${settings.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: 'Update 출장검사 일정 데이터', content: encodeBase64Utf8(payload), branch: settings.branch, ...(sha ? { sha } : {}) })
+                });
+                if (!response.ok) throw new Error(`GitHub 저장 실패 (${response.status})`);
+                addLog(`GitHub 저장 완료 (${settings.owner}/${settings.repo}/${settings.path})`);
+            } catch (e) {
+                console.error(e);
+                addLog(`GitHub 저장 실패: ${e.message}`);
+            } finally {
+                githubSyncing = false;
+            }
+        }
+
+        async function saveDatabase() {
+            saveLocalDatabase();
+
+            // 승인 대기(pending) 상태의 핸들은 폴더 쓰기에 사용하지 않습니다.
+            if (folderConnected && dirHandle) {
+                try {
+                    const fileHandle = await dirHandle.getFileHandle('data.json', { create: true });
+                    const writable = await fileHandle.createWritable();
+                    const payload = { companies, inspectors, pjts, schedules };
+                    await writable.write(JSON.stringify(payload, null, 2));
+                    await writable.close();
+                    addLog("실시간 자동 저장 완료 (" + dirHandle.name + "/data.json)");
+                    return;
+                } catch (e) {
+                    folderConnected = false;
+                    updateFolderUI('pending');
+                    addLog("폴더 쓰기 권한이 잠겨 브라우저에만 저장했습니다.");
+                    return;
+                }
+            }
+
+            const githubSettings = getGitHubSettings();
+            if (githubSettings) {
+                await syncToGitHub(githubSettings);
+                return;
+            }
+            addLog("브라우저 내 실시간 임시 저장 완료");
+        }
+
+
+        // 헤더용 컴팩트 폴더 연동 UI 동적 렌더링
+        function updateFolderUI(status) {
+            const area = document.getElementById('folder-status-area');
+            if (status === 'connected') {
+                area.innerHTML = `
+                    <div class="flex items-center space-x-2 bg-emerald-950/40 px-3 py-1.5 rounded-full border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="truncate max-w-[120px]" title="${dirHandle.name}">📂 ${dirHandle.name}</span>
+                        <button onclick="connectFolder()" class="text-slate-400 hover:text-white text-[10px] ml-1.5 border-l border-emerald-500/30 pl-2 transition-colors">변경</button>
+                    </div>
+                `;
+            } else if (status === 'pending') {
+                area.innerHTML = `
+                    <div class="flex items-center space-x-2 bg-amber-950/40 px-3 py-1 rounded-full border border-amber-500/30 text-amber-400 text-xs font-semibold animate-pulse">
+                        <i class="fa-solid fa-lock text-amber-500"></i>
+                        <span class="truncate max-w-[100px]">${dirHandle.name}</span>
+                        <button onclick="approveReconnect()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-0.5 px-2 rounded-md text-[10px] ml-1 transition-transform active:scale-95">🔓 승인</button>
+                    </div>
+                `;
+            } else {
+                area.innerHTML = `
+                    <button onclick="connectFolder()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-full text-xs flex items-center space-x-1 shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all">
+                        <i class="fa-solid fa-folder-plus text-[10px]"></i>
+                        <span>로컬 폴더 연결</span>
+                    </button>
+                `;
+            }
+        }
+
+        // 검사 PJT 목록 정렬
+        function sortPjts() {
+            pjts.sort((a, b) => a.localeCompare(b, 'ko'));
+        }
+
+        // 외주사 가나다순 정렬
+        function sortCompanies() {
+            companies.sort((a, b) => a.localeCompare(b, 'ko'));
+        }
+
+        // 테마 및 화면 제어
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'fa-solid fa-moon';
+                text.innerText = '다크 모드';
+                addLog('라이트 모드로 전환되었습니다.');
+            } else {
+                html.classList.add('dark');
+                icon.className = 'fa-solid fa-sun';
+                text.innerText = '라이트 모드';
+                addLog('다크 모드로 전환되었습니다.');
+            }
+        }
+
+        function toggleFullscreen() {
+            const text = document.getElementById('fullscreen-text');
+            const icon = document.getElementById('fullscreen-icon');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    text.innerText = '창 모드';
+                    icon.className = 'fa-solid fa-compress';
+                    addLog('전체화면 모드가 활성화되었습니다.');
+                }).catch(err => {
+                    addLog("전체화면 전환 오류: " + err.message);
+                });
+            } else {
+                document.exitFullscreen().then(() => {
+                    text.innerText = '전체화면';
+                    icon.className = 'fa-solid fa-expand';
+                    addLog('전체화면 모드가 해제되었습니다.');
+                });
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const text = document.getElementById('fullscreen-text');
+            const icon = document.getElementById('fullscreen-icon');
+            if (document.fullscreenElement) {
+                text.innerText = '창 모드';
+                icon.className = 'fa-solid fa-compress';
+            } else {
+                text.innerText = '전체화면';
+                icon.className = 'fa-solid fa-expand';
+            }
+        });
+
+        // 입력/수정 화면의 선택 목록 동기화
+        function updateBasicLists() {
+            const companyOptions = companies.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+            const inspectorOptions = inspectors.map(i => `<option value="${escapeHtml(i)}">${escapeHtml(i)}</option>`).join('');
+            const pjtOptions = `<option value="">선택 안 함</option>` + pjts.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+
+            document.getElementById('schedule-company').innerHTML = companyOptions;
+            document.getElementById('schedule-inspector').innerHTML = inspectorOptions;
+            document.getElementById('schedule-pjt').innerHTML = pjtOptions;
+            document.getElementById('edit-schedule-company').innerHTML = companyOptions;
+            document.getElementById('edit-schedule-inspector').innerHTML = inspectorOptions;
+            document.getElementById('edit-schedule-pjt').innerHTML = pjtOptions;
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#039;'}[char]));
+        }
+
+        // 데이터 변경 전 폴더 연결 및 쓰기 권한 승인 여부를 확인합니다.
+        function requireFolderApproval() {
+            if (folderConnected && dirHandle) return true;
+
+            const message = dirHandle
+                ? '폴더 연결 권한 승인이 필요합니다. 상단의 [🔓 승인] 버튼을 눌러 승인한 후 입력해 주세요.'
+                : '데이터를 입력하려면 먼저 상단의 [로컬 폴더 연결] 버튼으로 폴더를 연결하고 권한을 승인해 주세요.';
+            alert(message);
+            addLog('폴더 연결 승인 전 입력이 차단되었습니다.');
+            return false;
+        }
+
+        function getManagerData() {
+            return activeManager === 'company' ? companies : activeManager === 'inspector' ? inspectors : pjts;
+        }
+
+        function getManagerTitle() {
+            return activeManager === 'company' ? '외주사 관리' : activeManager === 'inspector' ? '검사자 관리' : '검사 PJT 관리';
+        }
+
+        function openManagerModal(type) {
+            activeManager = type;
+            resetManagerForm();
+            document.getElementById('manager-title').innerText = getManagerTitle();
+            document.getElementById('manager-input').placeholder = `${getManagerTitle().replace(' 관리','')}명 입력`;
+            document.getElementById('manager-modal').classList.remove('hidden');
+            renderManagerList();
+            setTimeout(() => document.getElementById('manager-input').focus(), 0);
+        }
+
+        function closeManagerModal() {
+            document.getElementById('manager-modal').classList.add('hidden');
+            activeManager = null;
+            editingManagerIndex = null;
+        }
+
+        function resetManagerForm() {
+            editingManagerIndex = null;
+            const input = document.getElementById('manager-input');
+            if (input) input.value = '';
+            const saveBtn = document.getElementById('manager-save-btn');
+            if (saveBtn) saveBtn.innerText = '추가';
+            const cancelBtn = document.getElementById('manager-cancel-btn');
+            if (cancelBtn) cancelBtn.classList.add('hidden');
+        }
+
+        function renderManagerList() {
+            const data = getManagerData();
+            const list = document.getElementById('manager-list');
+            if (!data.length) {
+                list.innerHTML = '<div class="py-8 text-center text-xs text-slate-400">등록된 항목이 없습니다.</div>';
+                return;
+            }
+            list.innerHTML = data.map((item, index) => `
+                <div class="flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200/70 dark:border-slate-700">
+                    <span class="text-sm truncate">${escapeHtml(item)}</span>
+                    <div class="flex gap-1 shrink-0">
+                        <button onclick="startManagerEdit(${index})" class="text-amber-500 hover:bg-amber-50 dark:hover:bg-slate-700 p-1.5 rounded" title="수정"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteManagerItem(${index})" class="text-rose-500 hover:bg-rose-50 dark:hover:bg-slate-700 p-1.5 rounded" title="삭제"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </div>`).join('');
+        }
+
+        function startManagerEdit(index) {
+            editingManagerIndex = index;
+            const data = getManagerData();
+            document.getElementById('manager-input').value = data[index];
+            document.getElementById('manager-save-btn').innerText = '수정 저장';
+            document.getElementById('manager-cancel-btn').classList.remove('hidden');
+            document.getElementById('manager-input').focus();
+        }
+
+        async function saveManagerItem() {
+            if (!requireFolderApproval()) return;
+            const input = document.getElementById('manager-input');
+            const value = input.value.trim();
+            if (!value) return;
+            const data = getManagerData();
+            const oldValue = editingManagerIndex !== null ? data[editingManagerIndex] : null;
+            if (data.includes(value) && value !== oldValue) {
+                alert('이미 등록된 항목입니다.');
+                return;
+            }
+            if (editingManagerIndex === null) data.push(value);
+            else {
+                data[editingManagerIndex] = value;
+                if (activeManager === 'company') schedules.forEach(s => { if (s.company === oldValue) s.company = value; });
+                if (activeManager === 'inspector') schedules.forEach(s => { if (s.inspector === oldValue) s.inspector = value; });
+                if (activeManager === 'pjt') schedules.forEach(s => { if (s.pjt === oldValue) s.pjt = value; });
+            }
+            if (activeManager === 'company') sortCompanies();
+            if (activeManager === 'pjt') sortPjts();
+            await saveDatabase();
+            updateBasicLists();
+            renderManagerList();
+            renderCalendar();
+            searchSchedules();
+            resetManagerForm();
+        }
+
+        async function deleteManagerItem(index) {
+            if (!requireFolderApproval()) return;
+            const data = getManagerData();
+            const value = data[index];
+            if (!confirm(`'${value}' 항목을 삭제하시겠습니까?`)) return;
+            data.splice(index, 1);
+            await saveDatabase();
+            updateBasicLists();
+            renderManagerList();
+            renderCalendar();
+            searchSchedules();
+        }
+
+        // 달력 렌더링
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            document.getElementById('calendar-title').innerText = `${currentYear}년 ${String(currentMonth + 1).padStart(2, '0')}월`;
+
+            const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+            const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            // 이전 달 날짜 채우기
+            for (let i = firstDayIndex - 1; i >= 0; i--) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'min-h-[100px] p-2 bg-slate-50/40 dark:bg-slate-900/10 text-slate-300 dark:text-slate-700 rounded-xl border border-transparent text-xs font-medium';
+                dayDiv.innerText = new Date(currentYear, currentMonth, 0).getDate() - i;
+                grid.appendChild(dayDiv);
+            }
+
+            // 해당 월의 실제 날짜와 일정 채우기
+            for (let day = 1; day <= lastDate; day++) {
+                const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const holidayName = getHoliday(dateString);
+                
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'min-h-[100px] p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/50 dark:border-slate-800 flex flex-col justify-between group shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer';
+                dayDiv.setAttribute('onclick', `selectDate('${dateString}')`);
+
+                const today = new Date();
+                const isToday = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === day;
+                
+                let dateNumClass = 'text-sm font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full';
+                if (isToday) {
+                    dateNumClass += ' bg-indigo-600 text-white shadow-md shadow-indigo-500/30';
+                } else {
+                    const dayOfWeek = new Date(currentYear, currentMonth, day).getDay();
+                    if (dayOfWeek === 0 || holidayName) dateNumClass += ' text-rose-500';
+                    else if (dayOfWeek === 6) dateNumClass += ' text-blue-500';
+                    else dateNumClass += ' text-slate-700 dark:text-slate-300';
+                }
+
+                dayDiv.innerHTML = `
+                    <div class="flex justify-between items-start shrink-0">
+                        <span class="${dateNumClass}">${day}</span>
+                        ${holidayName ? `<span class="text-[10px] text-rose-500 dark:text-rose-400 font-bold bg-rose-50 dark:bg-rose-950/40 px-1 py-0.5 rounded-md truncate max-w-[65px] border border-rose-100 dark:border-rose-900/30 shadow-xs" title="${holidayName}">${holidayName}</span>` : ''}
+                    </div>
+                    <div class="flex-1 space-y-1 overflow-y-auto max-h-[70px] mt-1" id="events-${dateString}"></div>
+                `;
+
+                grid.appendChild(dayDiv);
+
+                const daySchedules = schedules.filter(s => s.date === dateString);
+                const eventContainer = dayDiv.querySelector(`#events-${dateString}`);
+                
+                daySchedules.forEach(sched => {
+                    // [변경 핵심] 검사자 고유 색상 클래스 가져오기
+                    const colorClasses = getInspectorColorClasses(sched.inspector);
+                    
+                    const eventEl = document.createElement('div');
+                    // 기존 bg-indigo-50 등을 제거하고, 동적 colorClasses 변수로 교체
+                    eventEl.className = `text-[11px] px-1.5 py-1 rounded-md font-bold flex justify-between items-start shadow-xs border break-all whitespace-normal transition-all duration-150 leading-relaxed ${colorClasses}`;
+                    
+                    const calendarDisplayText = `${sched.company} • ${sched.inspector}`;
+                    const tooltipText = `외주사: ${sched.company}\n검사자: ${sched.inspector}\n검사 PJT: ${sched.pjt || '없음'}\n출장일자: ${sched.date}`;
+
+                    eventEl.innerHTML = `
+                        <span class="flex-1 pr-1 font-bold animate-fadeIn" title="${tooltipText}">${calendarDisplayText}</span>
+                        <button onclick="deleteSchedule(${sched.id}, event)" class="opacity-0 group-hover:opacity-100 ml-0.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-opacity shrink-0 mt-0.5"><i class="fa-solid fa-xmark"></i></button>
+                    `;
+                    eventContainer.appendChild(eventEl);
+                });
+            }
+
+            // 다음 달 날짜 채우기
+            for (let i = 1; i <= (42 - (firstDayIndex + lastDate)) % 7; i++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'min-h-[100px] p-2 bg-slate-50/40 dark:bg-slate-900/10 text-slate-300 dark:text-slate-700 rounded-xl border border-transparent text-xs font-medium';
+                dayDiv.innerText = i;
+                grid.appendChild(dayDiv);
+            }
+        }
+
+        // 날짜 클릭 시 동작 (메시지 연동 포함)
+        function selectDate(dateString) {
+            document.getElementById('schedule-date').value = dateString;
+            const holidayName = getHoliday(dateString);
+            
+            const daySchedules = schedules.filter(s => s.date === dateString);
+            let scheduleLog = "";
+            if (daySchedules.length > 0) {
+                scheduleLog = " [당일 일정: " + daySchedules.map(s => `"${s.company} • ${s.inspector}" PJT명: [ ${s.pjt || '기록없음'} ]`).join(", ") + "]";
+            }
+
+            if (holidayName) {
+                alert(`🎉 ${dateString}은(는) 대한민국 국경일/기념일 [ ${holidayName} ] 입니다.`);
+                addLog(`일자 선택: ${dateString}은(는) [ ${holidayName} ] 입니다.${scheduleLog}`);
+            } else {
+                addLog(`일자 선택: ${dateString}이(가) 등록 준비용 날짜로 선택되었습니다.${scheduleLog}`);
+            }
+        }
+
+        function prevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+            searchSchedules();
+            addLog(`${currentYear}년 ${currentMonth + 1}월로 이동하였습니다.`);
+        }
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+            searchSchedules();
+            addLog(`${currentYear}년 ${currentMonth + 1}월로 이동하였습니다.`);
+        }
+        function goToday() {
+            const today = new Date();
+            currentYear = today.getFullYear();
+            currentMonth = today.getMonth();
+            renderCalendar();
+            searchSchedules();
+            addLog(`오늘 날짜(${currentYear}년 ${currentMonth + 1}월)로 이동하였습니다.`);
+        }
+
+        async function saveSchedule() {
+            if (!requireFolderApproval()) return;
+            const company = document.getElementById('schedule-company').value;
+            const inspector = document.getElementById('schedule-inspector').value;
+            const pjt = document.getElementById('schedule-pjt').value.trim();
+            const date = document.getElementById('schedule-date').value;
+
+            if (!company || !inspector || !date) {
+                alert("외주사, 검사자, 출장일자를 모두 입력해 주세요.");
+                return;
+            }
+
+            const newId = schedules.length > 0 ? Math.max(...schedules.map(s => s.id)) + 1 : 1;
+            const newSchedule = { id: newId, company, inspector, date, pjt };
+            schedules.push(newSchedule);
+
+            document.getElementById('schedule-date').value = '';
+            document.getElementById('schedule-pjt').value = '';
+
+            await saveDatabase();
+            renderCalendar();
+            searchSchedules();
+        }
+
+        async function deleteSchedule(id, event) {
+            if (!requireFolderApproval()) return;
+            if (event) event.stopPropagation();
+            const index = schedules.findIndex(s => s.id === id);
+            if (index !== -1) {
+                schedules.splice(index, 1);
+                await saveDatabase();
+                renderCalendar();
+                searchSchedules();
+            }
+        }
+
+        function openEditModal(id, event) {
+            if (event) event.stopPropagation();
+            const sched = schedules.find(s => s.id === id);
+            if (!sched) return;
+
+            document.getElementById('edit-schedule-id').value = sched.id;
+            document.getElementById('edit-schedule-company').value = sched.company;
+            document.getElementById('edit-schedule-inspector').value = sched.inspector;
+            document.getElementById('edit-schedule-pjt').value = sched.pjt || '';
+            document.getElementById('edit-schedule-date').value = sched.date;
+
+            document.getElementById('edit-modal').classList.remove('hidden');
+            addLog("일정 수정 모달 창을 열었습니다.");
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        async function updateSchedule() {
+            if (!requireFolderApproval()) return;
+            const id = parseInt(document.getElementById('edit-schedule-id').value);
+            const company = document.getElementById('edit-schedule-company').value;
+            const inspector = document.getElementById('edit-schedule-inspector').value;
+            const pjt = document.getElementById('edit-schedule-pjt').value.trim();
+            const date = document.getElementById('edit-schedule-date').value;
+
+            if (!company || !inspector || !date) {
+                alert("외주사, 검사자, 출장일자는 필수 선택사항입니다.");
+                return;
+            }
+
+            const sched = schedules.find(s => s.id === id);
+            if (sched) {
+                sched.company = company;
+                sched.inspector = inspector;
+                sched.pjt = pjt;
+                sched.date = date;
+
+                await saveDatabase();
+                closeEditModal();
+                renderCalendar();
+                searchSchedules();
+            }
+        }
+
+        function printCalendar() {
+            window.print();
+        }
+
+        function exportToExcel() {
+            if (schedules.length === 0) {
+                alert("엑셀로 다운로드할 일정이 존재하지 않습니다.");
+                return;
+            }
+            let csvContent = "\uFEFF순번,외주사,출장검사자,검사 PJT,출장일자\n";
+            const sorted = [...schedules].sort((a, b) => new Date(a.date) - new Date(b.date));
+            sorted.forEach((s, idx) => {
+                csvContent += [idx + 1, `"${s.company}"`, `"${s.inspector}"`, `"${s.pjt || ''}"`, s.date].join(",") + "\n";
+            });
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `출장검사일정_리포트_${currentYear}년_${currentMonth + 1}월.csv`;
+            link.click();
+        }
+
+        function setSearchScope(scope) {
+            searchScope = scope;
+            document.getElementById('search-scope-month').className = `text-[11px] font-bold py-1.5 rounded-md ${scope === 'month' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`;
+            document.getElementById('search-scope-all').className = `text-[11px] font-bold py-1.5 rounded-md ${scope === 'all' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`;
+            searchSchedules();
+        }
+
+        function searchSchedules() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const resultsContainer = document.getElementById('search-results');
+            const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+            document.getElementById('search-scope-label').innerText = searchScope === 'month' ? `${currentYear}년 ${currentMonth + 1}월 일정 표시` : '전체 기간 일정 표시';
+
+            // 필수 항목(외주사, 검사자, 출장일자)이 비어 있는 임시/불완전 데이터는 검색 목록에서 제외합니다.
+            const filtered = schedules.filter(s => {
+                const company = String(s.company || '').trim();
+                const inspector = String(s.inspector || '').trim();
+                const pjt = String(s.pjt || '').trim();
+                const date = String(s.date || '').trim();
+
+                const isComplete = company && inspector && date;
+                const matchesText = company.toLowerCase().includes(query) || inspector.toLowerCase().includes(query) || pjt.toLowerCase().includes(query);
+                const matchesScope = searchScope === 'all' || date.startsWith(monthKey);
+
+                return isComplete && matchesText && matchesScope;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (!filtered.length) {
+                resultsContainer.innerHTML = `<div class="text-center py-6 text-slate-400 text-[11px]">${searchScope === 'month' ? '해당월' : '전체'} 검색 결과가 존재하지 않습니다.</div>`;
+                return;
+            }
+            resultsContainer.innerHTML = filtered.map(s => `
+                <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700 hover:border-indigo-500 hover:shadow-md hover:-translate-y-0.5 cursor-pointer transition-all duration-200 shadow-xs" onclick="focusDate('${s.date}')">
+                    <div class="flex justify-between items-start mb-0.5">
+                        <span class="font-bold text-xs truncate text-slate-800 dark:text-slate-100">${escapeHtml(s.company)}</span>
+                        <div class="flex items-center space-x-1.5 shrink-0">
+                            <button onclick="openEditModal(${s.id}, event)" class="text-slate-400 hover:text-amber-500 transition-colors text-xs" title="수정"><i class="fa-solid fa-pen-to-square text-[10px]"></i></button>
+                            <button onclick="deleteSchedule(${s.id}, event)" class="text-slate-400 hover:text-rose-500 transition-colors text-xs" title="삭제"><i class="fa-solid fa-trash-can text-[10px]"></i></button>
+                        </div>
+                    </div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 flex flex-col space-y-0.5">
+                        <span>검사자: ${escapeHtml(s.inspector)}</span>
+                        <span class="font-mono text-slate-400 text-[10px]">${s.date}</span>
+                        ${s.pjt ? `<div class="text-[9px] text-indigo-600 dark:text-indigo-400 font-bold mt-1 bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 rounded-md truncate max-w-full border border-indigo-100/40 dark:border-indigo-900/20">${escapeHtml(s.pjt)}</div>` : ''}
+                    </div>
+                </div>`).join('');
+        }
+
+        function focusDate(dateStr) {
+            const targetDate = new Date(dateStr);
+            currentYear = targetDate.getFullYear();
+            currentMonth = targetDate.getMonth();
+            renderCalendar();
+            searchSchedules();
+            addLog(`달력 초점이 ${dateStr}로 변경되었습니다.`);
+        }
+
+        // 로딩 생명주기 제어
+        window.onload = async () => {
+            await loadFallbackData();
+            await tryAutoReconnect();
+        };
+    </script>
+</body>
+</html>
