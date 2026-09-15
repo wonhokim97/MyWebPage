@@ -1,0 +1,480 @@
+{
+  "companies": [
+    "가온전선",
+    "고려전선",
+    "금화전선",
+    "기타업무",
+    "대원전선",
+    "디케이씨",
+    "모보",
+    "아시아전선",
+    "외주품질회의",
+    "유진통신",
+    "유창이앤씨",
+    "이엠지전선",
+    "지앤케이블",
+    "지앤피",
+    "진영전선",
+    "천일CIL",
+    "평택.포설",
+    "한미전선",
+    "IMK포설"
+  ],
+  "inspectors": [
+    "장인영(B)",
+    "김재호(A)",
+    "김원호",
+    "이우일",
+    "전체",
+    "자체"
+  ],
+  "pjts": [
+    "35KV URD 500MCM",
+    "가온전선 35kV URD 350KCM",
+    "외관수리",
+    "품질감사"
+  ],
+  "schedules": [
+    {
+      "id": 2,
+      "company": "한미전선",
+      "inspector": "장인영(B)",
+      "date": "2026-07-24",
+      "pjt": "가온전선 35kV URD 350KCM"
+    },
+    {
+      "id": 3,
+      "company": "한미전선",
+      "inspector": "김원호",
+      "date": "2026-07-28",
+      "pjt": "가온전선 35kV URD 350KCM"
+    },
+    {
+      "id": 4,
+      "company": "아시아전선",
+      "inspector": "장인영(B)",
+      "date": "2026-08-07",
+      "pjt": ""
+    },
+    {
+      "id": 5,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-07-01",
+      "pjt": ""
+    },
+    {
+      "id": 6,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-07-06",
+      "pjt": ""
+    },
+    {
+      "id": 7,
+      "company": "아시아전선",
+      "inspector": "장인영(B)",
+      "date": "2026-07-07",
+      "pjt": ""
+    },
+    {
+      "id": 8,
+      "company": "모보",
+      "inspector": "장인영(B)",
+      "date": "2026-07-08",
+      "pjt": ""
+    },
+    {
+      "id": 9,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-07-09",
+      "pjt": ""
+    },
+    {
+      "id": 10,
+      "company": "한미전선",
+      "inspector": "장인영(B)",
+      "date": "2026-07-13",
+      "pjt": "가온전선 35kV URD 350KCM"
+    },
+    {
+      "id": 11,
+      "company": "한미전선",
+      "inspector": "장인영(B)",
+      "date": "2026-07-14",
+      "pjt": "가온전선 35kV URD 350KCM"
+    },
+    {
+      "id": 12,
+      "company": "모보",
+      "inspector": "장인영(B)",
+      "date": "2026-07-15",
+      "pjt": ""
+    },
+    {
+      "id": 13,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-07-16",
+      "pjt": ""
+    },
+    {
+      "id": 14,
+      "company": "아시아전선",
+      "inspector": "장인영(B)",
+      "date": "2026-07-20",
+      "pjt": ""
+    },
+    {
+      "id": 15,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-07-21",
+      "pjt": ""
+    },
+    {
+      "id": 16,
+      "company": "지앤케이블",
+      "inspector": "이우일",
+      "date": "2026-06-01",
+      "pjt": ""
+    },
+    {
+      "id": 17,
+      "company": "모보",
+      "inspector": "이우일",
+      "date": "2026-06-04",
+      "pjt": ""
+    },
+    {
+      "id": 18,
+      "company": "지앤케이블",
+      "inspector": "이우일",
+      "date": "2026-06-05",
+      "pjt": ""
+    },
+    {
+      "id": 19,
+      "company": "지앤케이블",
+      "inspector": "이우일",
+      "date": "2026-06-09",
+      "pjt": ""
+    },
+    {
+      "id": 20,
+      "company": "지앤케이블",
+      "inspector": "이우일",
+      "date": "2026-06-12",
+      "pjt": ""
+    },
+    {
+      "id": 21,
+      "company": "지앤케이블",
+      "inspector": "이우일",
+      "date": "2026-06-17",
+      "pjt": ""
+    },
+    {
+      "id": 22,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-06-22",
+      "pjt": ""
+    },
+    {
+      "id": 23,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-06-26",
+      "pjt": ""
+    },
+    {
+      "id": 24,
+      "company": "모보",
+      "inspector": "장인영(B)",
+      "date": "2026-06-25",
+      "pjt": ""
+    },
+    {
+      "id": 25,
+      "company": "아시아전선",
+      "inspector": "장인영(B)",
+      "date": "2026-06-17",
+      "pjt": ""
+    },
+    {
+      "id": 26,
+      "company": "모보",
+      "inspector": "이우일",
+      "date": "2026-06-16",
+      "pjt": ""
+    },
+    {
+      "id": 27,
+      "company": "모보",
+      "inspector": "이우일",
+      "date": "2026-06-11",
+      "pjt": ""
+    },
+    {
+      "id": 28,
+      "company": "평택.포설",
+      "inspector": "장인영(B)",
+      "date": "2026-06-01",
+      "pjt": ""
+    },
+    {
+      "id": 29,
+      "company": "평택.포설",
+      "inspector": "장인영(B)",
+      "date": "2026-06-02",
+      "pjt": ""
+    },
+    {
+      "id": 30,
+      "company": "평택.포설",
+      "inspector": "장인영(B)",
+      "date": "2026-06-04",
+      "pjt": ""
+    },
+    {
+      "id": 31,
+      "company": "평택.포설",
+      "inspector": "장인영(B)",
+      "date": "2026-06-05",
+      "pjt": ""
+    },
+    {
+      "id": 32,
+      "company": "평택.포설",
+      "inspector": "장인영(B)",
+      "date": "2026-06-08",
+      "pjt": ""
+    },
+    {
+      "id": 33,
+      "company": "평택.포설",
+      "inspector": "장인영(B)",
+      "date": "2026-06-09",
+      "pjt": ""
+    },
+    {
+      "id": 34,
+      "company": "평택.포설",
+      "inspector": "장인영(B)",
+      "date": "2026-06-10",
+      "pjt": ""
+    },
+    {
+      "id": 35,
+      "company": "평택.포설",
+      "inspector": "장인영(B)",
+      "date": "2026-06-11",
+      "pjt": ""
+    },
+    {
+      "id": 36,
+      "company": "평택.포설",
+      "inspector": "장인영(B)",
+      "date": "2026-06-12",
+      "pjt": ""
+    },
+    {
+      "id": 37,
+      "company": "모보",
+      "inspector": "장인영(B)",
+      "date": "2026-06-29",
+      "pjt": ""
+    },
+    {
+      "id": 38,
+      "company": "모보",
+      "inspector": "장인영(B)",
+      "date": "2026-06-30",
+      "pjt": ""
+    },
+    {
+      "id": 39,
+      "company": "한미전선",
+      "inspector": "장인영(B)",
+      "date": "2026-08-06",
+      "pjt": ""
+    },
+    {
+      "id": 40,
+      "company": "모보",
+      "inspector": "장인영(B)",
+      "date": "2026-08-05",
+      "pjt": ""
+    },
+    {
+      "id": 41,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-08-04",
+      "pjt": ""
+    },
+    {
+      "id": 42,
+      "company": "금화전선",
+      "inspector": "장인영(B)",
+      "date": "2026-08-10",
+      "pjt": ""
+    },
+    {
+      "id": 43,
+      "company": "천일CIL",
+      "inspector": "장인영(B)",
+      "date": "2026-08-11",
+      "pjt": ""
+    },
+    {
+      "id": 44,
+      "company": "천일CIL",
+      "inspector": "장인영(B)",
+      "date": "2026-08-19",
+      "pjt": ""
+    },
+    {
+      "id": 45,
+      "company": "모보",
+      "inspector": "장인영(B)",
+      "date": "2026-08-13",
+      "pjt": "35KV URD 500MCM"
+    },
+    {
+      "id": 46,
+      "company": "아시아전선",
+      "inspector": "장인영(B)",
+      "date": "2026-08-21",
+      "pjt": ""
+    },
+    {
+      "id": 47,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-08-14",
+      "pjt": ""
+    },
+    {
+      "id": 49,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-08-24",
+      "pjt": ""
+    },
+    {
+      "id": 50,
+      "company": "천일CIL",
+      "inspector": "장인영(B)",
+      "date": "2026-08-25",
+      "pjt": ""
+    },
+    {
+      "id": 51,
+      "company": "기타업무",
+      "inspector": "장인영(B)",
+      "date": "2026-08-20",
+      "pjt": "외관수리"
+    },
+    {
+      "id": 52,
+      "company": "모보",
+      "inspector": "장인영(B)",
+      "date": "2026-08-26",
+      "pjt": ""
+    },
+    {
+      "id": 53,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-08-27",
+      "pjt": ""
+    },
+    {
+      "id": 54,
+      "company": "외주품질회의",
+      "inspector": "전체",
+      "date": "2026-09-01",
+      "pjt": ""
+    },
+    {
+      "id": 55,
+      "company": "모보",
+      "inspector": "김재호(A)",
+      "date": "2026-09-03",
+      "pjt": ""
+    },
+    {
+      "id": 56,
+      "company": "유진통신",
+      "inspector": "자체",
+      "date": "2026-09-03",
+      "pjt": ""
+    },
+    {
+      "id": 57,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-09-02",
+      "pjt": ""
+    },
+    {
+      "id": 58,
+      "company": "유진통신",
+      "inspector": "김재호(A)",
+      "date": "2026-09-10",
+      "pjt": ""
+    },
+    {
+      "id": 59,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-09-07",
+      "pjt": ""
+    },
+    {
+      "id": 60,
+      "company": "아시아전선",
+      "inspector": "장인영(B)",
+      "date": "2026-09-09",
+      "pjt": ""
+    },
+    {
+      "id": 61,
+      "company": "지앤케이블",
+      "inspector": "장인영(B)",
+      "date": "2026-09-10",
+      "pjt": ""
+    },
+    {
+      "id": 62,
+      "company": "금화전선",
+      "inspector": "장인영(B)",
+      "date": "2026-09-16",
+      "pjt": ""
+    },
+    {
+      "id": 63,
+      "company": "모보",
+      "inspector": "장인영(B)",
+      "date": "2026-09-18",
+      "pjt": ""
+    },
+    {
+      "id": 64,
+      "company": "지앤케이블",
+      "inspector": "김재호(A)",
+      "date": "2026-09-17",
+      "pjt": ""
+    },
+    {
+      "id": 65,
+      "company": "평택.포설",
+      "inspector": "장인영(B)",
+      "date": "2026-09-17",
+      "pjt": ""
+    }
+  ]
+}
