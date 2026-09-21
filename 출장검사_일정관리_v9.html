@@ -368,6 +368,91 @@
             document.getElementById('log-text').innerText = `[${timeStr[0]}] ${message}`;
         }
 
+        let appPassword = localStorage.getItem('travelschedule-password') || '';
+
+        function ensureAppPassword() {
+            if (appPassword) return appPassword;
+
+            const savedPassword = localStorage.getItem('travelschedule-password');
+            if (savedPassword) {
+                appPassword = savedPassword;
+                return appPassword;
+            }
+
+            const input = window.prompt('데이터 암호를 설정하세요. 이 비밀번호로 로컬/ GitHub 데이터가 암호화됩니다.', '');
+            const nextPassword = (input || '').trim();
+            if (!nextPassword) {
+                appPassword = 'travel-schedule-default';
+            } else {
+                appPassword = nextPassword;
+            }
+
+            localStorage.setItem('travelschedule-password', appPassword);
+            return appPassword;
+        }
+
+        async function getKey(password, salt) {
+            const enc = new TextEncoder();
+            const subtle = window.crypto.subtle || window.crypto.webkitSubtle;
+            const keyMaterial = await subtle.importKey(
+                'raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveKey']
+            );
+            return subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt,
+                    iterations: 100000,
+                    hash: 'SHA-256'
+                },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        async function encryptData(plainText, password) {
+            const enc = new TextEncoder();
+            const salt = window.crypto.getRandomValues(new Uint8Array(16));
+            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+            const key = await getKey(password, salt);
+            const subtle = window.crypto.subtle || window.crypto.webkitSubtle;
+            const encrypted = await subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plainText));
+
+            const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+            combined.set(salt, 0);
+            combined.set(iv, salt.length);
+            combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+            let binaryStr = '';
+            const chunkSize = 8192;
+            for (let i = 0; i < combined.length; i += chunkSize) {
+                binaryStr += String.fromCharCode.apply(null, combined.subarray(i, i + chunkSize));
+            }
+            return btoa(binaryStr);
+        }
+
+        async function decryptData(cipherBase64, password) {
+            try {
+                const binaryStr = atob(cipherBase64);
+                const combined = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    combined[i] = binaryStr.charCodeAt(i);
+                }
+
+                const salt = combined.slice(0, 16);
+                const iv = combined.slice(16, 28);
+                const data = combined.slice(28);
+
+                const key = await getKey(password, salt);
+                const subtle = window.crypto.subtle || window.crypto.webkitSubtle;
+                const decrypted = await subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+                return new TextDecoder().decode(decrypted);
+            } catch (error) {
+                throw new Error('비밀번호가 맞지 않거나 데이터가 손상되었습니다.');
+            }
+        }
+
         const GITHUB_CONFIG_KEY = 'travelschedule_github_config';
 
         function getDefaultGithubConfig() {
@@ -455,10 +540,64 @@
             return {
                 owner: parts[0],
                 repoName: parts.slice(1).join('/'),
-                branch: (config.branch || 'main').trim() || 'main',
+                branch: (config.branch || '').trim() || '',
                 filePath: (config.filePath || 'data.json').trim().replace(/^\/+/, '') || 'data.json',
                 token: (config.token || '').trim()
             };
+        }
+
+        async function requestGithubRepoInfo(owner, repoName, token) {
+            const url = `https://api.github.com/repos/${owner}/${repoName}`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': token ? `Bearer ${token}` : undefined,
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            });
+
+            if (response.status === 404) return null;
+            if (!response.ok) {
+                const message = await response.text();
+                throw new Error(`GitHub 저장소 조회 실패: ${response.status} ${message}`);
+            }
+
+            return await response.json();
+        }
+
+        async function resolveGithubBranch(config) {
+            const repoInfo = await requestGithubRepoInfo(config.owner, config.repoName, config.token);
+            if (!repoInfo) {
+                throw new Error('GitHub 저장소를 찾을 수 없습니다. owner/repository 또는 저장소 접근 권한을 확인해 주세요.');
+            }
+
+            const defaultBranch = (repoInfo.default_branch || 'main').trim() || 'main';
+            const requestedBranch = (config.branch || defaultBranch).trim() || defaultBranch;
+
+            const branchUrl = `https://api.github.com/repos/${config.owner}/${config.repoName}/branches/${encodeURIComponent(requestedBranch)}`;
+            const branchResponse = await fetch(branchUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': config.token ? `Bearer ${config.token}` : undefined,
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            });
+
+            if (branchResponse.status === 404) {
+                if (requestedBranch !== defaultBranch) {
+                    return { ...config, branch: defaultBranch };
+                }
+                throw new Error(`GitHub 브랜치 '${requestedBranch}'를 찾을 수 없습니다. 저장 설정의 브랜치를 확인해 주세요.`);
+            }
+
+            if (!branchResponse.ok) {
+                const detail = await branchResponse.text();
+                throw new Error(`GitHub 브랜치 확인 실패: ${branchResponse.status} ${detail}`);
+            }
+
+            return { ...config, branch: requestedBranch };
         }
 
         function getDatabasePayload() {
@@ -492,6 +631,7 @@
 
         async function uploadToGitHub() {
             try {
+                const password = ensureAppPassword();
                 const config = getGithubRepoParts();
                 if (!config.token) {
                     alert('GitHub Personal Access Token을 먼저 저장해 주세요.');
@@ -499,11 +639,12 @@
                     return;
                 }
 
-                const repoCheckUrl = `https://api.github.com/repos/${config.owner}/${config.repoName}`;
+                const resolvedConfig = await resolveGithubBranch(config);
+                const repoCheckUrl = `https://api.github.com/repos/${resolvedConfig.owner}/${resolvedConfig.repoName}`;
                 const repoCheckResponse = await fetch(repoCheckUrl, {
                     headers: {
                         'Accept': 'application/vnd.github+json',
-                        'Authorization': `Bearer ${config.token}`,
+                        'Authorization': `Bearer ${resolvedConfig.token}`,
                         'X-GitHub-Api-Version': '2022-11-28'
                     }
                 });
@@ -516,15 +657,23 @@
                     throw new Error(`GitHub 저장소 확인 실패: ${repoCheckResponse.status} ${detail}`);
                 }
 
-                const filePath = config.filePath;
-                const repoUrl = `https://api.github.com/repos/${config.owner}/${config.repoName}/contents/${encodeURIComponent(filePath).replace(/%2F/g, '/')}`;
-                const existing = await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(config.branch)}`, config.token);
+                const filePath = resolvedConfig.filePath;
+                const repoUrl = `https://api.github.com/repos/${resolvedConfig.owner}/${resolvedConfig.repoName}/contents/${encodeURIComponent(filePath).replace(/%2F/g, '/')}`;
+                const existing = await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
                 const payload = getDatabasePayload();
-                const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+                const encryptedPayload = await encryptData(JSON.stringify(payload, null, 2), password);
+
+                let binaryStr = '';
+                const enc = new TextEncoder().encode(encryptedPayload);
+                const chunkSize = 8192;
+                for (let i = 0; i < enc.length; i += chunkSize) {
+                    binaryStr += String.fromCharCode(...enc.slice(i, i + chunkSize));
+                }
+                const content = btoa(binaryStr);
                 const requestBody = {
                     message: `업데이트: ${new Date().toISOString()}`,
                     content,
-                    branch: config.branch
+                    branch: resolvedConfig.branch
                 };
 
                 if (existing && existing.sha) {
@@ -535,7 +684,7 @@
                     method: 'PUT',
                     headers: {
                         'Accept': 'application/vnd.github+json',
-                        'Authorization': `Bearer ${config.token}`,
+                        'Authorization': `Bearer ${resolvedConfig.token}`,
                         'Content-Type': 'application/json',
                         'X-GitHub-Api-Version': '2022-11-28'
                     },
@@ -544,11 +693,42 @@
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`GitHub 업로드 실패: ${response.status} ${errorText}`);
+                    let parsedMessage = errorText;
+                    try {
+                        parsedMessage = JSON.parse(errorText).message || errorText;
+                    } catch (e) {
+                        parsedMessage = errorText;
+                    }
+
+                    const isConflict = (response.status === 409 || response.status === 422) && /does not match|sha/i.test(parsedMessage);
+                    if (isConflict) {
+                        const refreshed = await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
+                        if (refreshed && refreshed.sha) {
+                            requestBody.sha = refreshed.sha;
+                            const retryResponse = await fetch(repoUrl, {
+                                method: 'PUT',
+                                headers: {
+                                    'Accept': 'application/vnd.github+json',
+                                    'Authorization': `Bearer ${resolvedConfig.token}`,
+                                    'Content-Type': 'application/json',
+                                    'X-GitHub-Api-Version': '2022-11-28'
+                                },
+                                body: JSON.stringify(requestBody)
+                            });
+                            if (!retryResponse.ok) {
+                                const retryText = await retryResponse.text();
+                                throw new Error(`GitHub 업로드 실패: ${retryResponse.status} ${retryText}`);
+                            }
+                        } else {
+                            throw new Error(`GitHub 업로드 실패: ${response.status} ${parsedMessage}`);
+                        }
+                    } else {
+                        throw new Error(`GitHub 업로드 실패: ${response.status} ${parsedMessage}`);
+                    }
                 }
 
                 saveLocalDatabase();
-                addLog(`GitHub에 데이터가 저장되었습니다. (${config.owner}/${config.repoName}/${filePath})`);
+                addLog(`GitHub에 암호화된 데이터가 저장되었습니다. (${resolvedConfig.owner}/${resolvedConfig.repoName}/${filePath})`);
             } catch (error) {
                 console.error(error);
                 alert(`GitHub 저장 실패: ${error.message}`);
@@ -558,6 +738,7 @@
 
         async function downloadFromGitHub() {
             try {
+                const password = ensureAppPassword();
                 const config = getGithubRepoParts();
                 if (!config.token) {
                     alert('GitHub Personal Access Token을 먼저 저장해 주세요.');
@@ -565,12 +746,13 @@
                     return;
                 }
 
-                const repoUrl = `https://api.github.com/repos/${config.owner}/${config.repoName}/contents/${encodeURIComponent(config.filePath).replace(/%2F/g, '/')}`;
-                const response = await fetch(`${repoUrl}?ref=${encodeURIComponent(config.branch)}`, {
+                const resolvedConfig = await resolveGithubBranch(config);
+                const repoUrl = `https://api.github.com/repos/${resolvedConfig.owner}/${resolvedConfig.repoName}/contents/${encodeURIComponent(resolvedConfig.filePath).replace(/%2F/g, '/')}`;
+                const response = await fetch(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/vnd.github+json',
-                        'Authorization': `Bearer ${config.token}`,
+                        'Authorization': `Bearer ${resolvedConfig.token}`,
                         'X-GitHub-Api-Version': '2022-11-28'
                     }
                 });
@@ -588,7 +770,19 @@
                 const decoded = decodeURIComponent(Array.from(atob(fileData.content.replace(/\n/g, '')))
                     .map(char => `%${('00' + char.charCodeAt(0).toString(16)).slice(-2)}`)
                     .join(''));
-                const parsed = JSON.parse(decoded);
+
+                let parsed = {};
+                try {
+                    const decrypted = await decryptData(decoded, password);
+                    parsed = JSON.parse(decrypted);
+                } catch (decryptError) {
+                    try {
+                        parsed = JSON.parse(decoded);
+                        addLog('GitHub의 기존 평문 데이터가 감지되어 그대로 불러왔습니다.');
+                    } catch (jsonError) {
+                        throw new Error('GitHub 데이터 복호화 실패: 비밀번호가 올바르지 않거나 파일이 손상되었습니다.');
+                    }
+                }
 
                 companies = Array.isArray(parsed.companies) ? parsed.companies : [...(companies || [])];
                 inspectors = Array.isArray(parsed.inspectors) ? parsed.inspectors : [...(inspectors || [])];
@@ -601,7 +795,7 @@
                 updateBasicLists();
                 renderCalendar();
                 searchSchedules();
-                addLog(`GitHub에서 데이터를 불러왔습니다. (${config.owner}/${config.repoName}/${config.filePath})`);
+                addLog(`GitHub에서 암호화된 데이터를 불러왔습니다. (${resolvedConfig.owner}/${resolvedConfig.repoName}/${resolvedConfig.filePath})`);
             } catch (error) {
                 console.error(error);
                 alert(`GitHub 불러오기 실패: ${error.message}`);
@@ -709,18 +903,32 @@
                 const fileText = await file.text();
 
                 if (fileText.trim()) {
-                    // 폴더에 기존 데이터가 있으면 폴더 데이터를 기준으로 불러옵니다.
-                    const data = JSON.parse(fileText);
-                    companies = data.companies || ["삼성전자", "LG화학", "SK하이닉스"];
-                    inspectors = data.inspectors || ["홍길동 과장", "이몽룡 대리", "성춘향 주임"];
-                    schedules = data.schedules || [];
-                    pjts = data.pjts || [...new Set(schedules.map(s => (s.pjt || '').trim()).filter(Boolean))];
+                    try {
+                        const decryptedText = await decryptData(fileText, ensureAppPassword());
+                        const data = JSON.parse(decryptedText);
+                        companies = data.companies || ["삼성전자", "LG화학", "SK하이닉스"];
+                        inspectors = data.inspectors || ["홍길동 과장", "이몽룡 대리", "성춘향 주임"];
+                        schedules = data.schedules || [];
+                        pjts = data.pjts || [...new Set(schedules.map(s => (s.pjt || '').trim()).filter(Boolean))];
+                    } catch (decryptError) {
+                        try {
+                            const data = JSON.parse(fileText);
+                            companies = data.companies || ["삼성전자", "LG화학", "SK하이닉스"];
+                            inspectors = data.inspectors || ["홍길동 과장", "이몽룡 대리", "성춘향 주임"];
+                            schedules = data.schedules || [];
+                            pjts = data.pjts || [...new Set(schedules.map(s => (s.pjt || '').trim()).filter(Boolean))];
+                            await saveDatabase();
+                            addLog("기존 평문 폴더 데이터가 감지되어 자동 암호화 저장이 적용되었습니다.");
+                        } catch (parseError) {
+                            console.error(parseError);
+                            throw new Error('데이터 복호화 실패: 비밀번호가 올바르지 않거나 파일이 손상되었습니다.');
+                        }
+                    }
+
                     folderConnected = true;
                     saveLocalDatabase();
                     addLog("폴더 자동 저장 활성화 ('" + dirHandle.name + "' 연동됨)");
                 } else {
-                    // 빈 data.json에는 승인 전 브라우저에 작성한 데이터를 그대로 저장합니다.
-                    // 기존 작성 데이터를 초기화하지 않으므로 일정이 사라지지 않습니다.
                     folderConnected = true;
                     await saveDatabase();
                     addLog("기존 작성 데이터를 '" + dirHandle.name + "/data.json'에 저장했습니다.");
@@ -770,13 +978,13 @@
         async function saveDatabase() {
             saveLocalDatabase();
 
-            // 승인 대기(pending) 상태의 핸들은 폴더 쓰기에 사용하지 않습니다.
             if (folderConnected && dirHandle) {
                 try {
                     const fileHandle = await dirHandle.getFileHandle('data.json', { create: true });
                     const writable = await fileHandle.createWritable();
                     const payload = { companies, inspectors, pjts, schedules };
-                    await writable.write(JSON.stringify(payload, null, 2));
+                    const encrypted = await encryptData(JSON.stringify(payload, null, 2), ensureAppPassword());
+                    await writable.write(encrypted);
                     await writable.close();
                     addLog("실시간 자동 저장 완료 (" + dirHandle.name + "/data.json)");
                     return;
