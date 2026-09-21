@@ -1,0 +1,2046 @@
+{
+  "2026-06-24": [
+    {
+      "completed": true,
+      "planTime": "13:30",
+      "endTime": "15:00",
+      "todo": "6월 배전 품질회의",
+      "location": "본관3층 솔루션",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "16:00",
+      "endTime": "18:00",
+      "todo": "휴가(2hr)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-06-23": [
+    {
+      "completed": true,
+      "planTime": "13:30",
+      "endTime": "18:00",
+      "todo": "교육)AI 라이브 클래스",
+      "location": "원칙 회의실",
+      "remarks": "팀즈 온라인 강의",
+      "details": "- 각의내용: 챗봇 만들기"
+    }
+  ],
+  "2026-06-02": [
+    {
+      "completed": true,
+      "planTime": "08:50",
+      "endTime": "17:30",
+      "todo": "아시아전선 품질감사",
+      "location": "아시아전선",
+      "remarks": "남현우 과장",
+      "details": ""
+    }
+  ],
+  "2026-06-04": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "18:00",
+      "todo": "휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-06-05": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "18:00",
+      "todo": "휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-06-09": [
+    {
+      "completed": true,
+      "planTime": "09:30",
+      "endTime": "11:30",
+      "todo": "QMS 2.0회의",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-06-10": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "18:00",
+      "todo": "교육)Work Redesign W/S",
+      "location": "구미1층 대강당",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-06-11": [
+    {
+      "completed": true,
+      "planTime": "08:50",
+      "endTime": "17:30",
+      "todo": "출장.지앤피우드 특별감사(목드럼 곰팡이)",
+      "location": "지앤피우드",
+      "remarks": "배전Cable개발팀 이재형 차장",
+      "details": ""
+    }
+  ],
+  "2026-06-19": [
+    {
+      "completed": true,
+      "planTime": "10:00",
+      "endTime": "11:00",
+      "todo": "QMS 2.0회의 (사진대지)",
+      "location": "",
+      "remarks": "팀즈 온라인",
+      "details": "- DT기획팀 한민수 과장 사진대지 프로그램 사용 설명\n- 본관 3층 회의실 방문해서 사진대지 필요성 설명"
+    },
+    {
+      "completed": true,
+      "planTime": "10:00",
+      "endTime": "11:00",
+      "todo": "목드럼 회의 (*미참석)",
+      "location": "",
+      "remarks": "팀장 주재",
+      "details": ""
+    }
+  ],
+  "2026-07-03": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "18:00",
+      "todo": "휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "10:00",
+      "endTime": "10:40",
+      "todo": "운전 면허증 찾기",
+      "location": "구미경찰서",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-06-30": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "상반기 구매품 품질현황 자료 정리 - 김기훈 차장",
+      "location": "",
+      "remarks": "팀장(6/28일)",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "지석엔지니어링 IMK용 철드럼 성적서 양식 메일 송부",
+      "location": "",
+      "remarks": "주우진 차장",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "",
+      "todo": "본부/부문 목표 연계 항목 집계 - 팀장",
+      "location": "",
+      "remarks": "팀장(6/28일)",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "10:00",
+      "endTime": "10:50",
+      "todo": "중고 목드럼 대책 회의",
+      "location": "",
+      "remarks": "팀장",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "11:30",
+      "endTime": "12:00",
+      "todo": "6월 구매품질팀 안전보건교육",
+      "location": "",
+      "remarks": "팀장",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "13:30",
+      "endTime": "14:20",
+      "todo": "원진산업 해외 수출용 목드럼 관리상태 점검",
+      "location": "",
+      "remarks": "",
+      "details": "1.가온전선 URD용 플랜지 및 동목 실내 보관 확인\n2.가온전선 URD용 목드럼 야적장 보관 상태 곰팡이 점검"
+    },
+    {
+      "completed": true,
+      "planTime": "17:30",
+      "endTime": "18:00",
+      "todo": "품질부문장 대시보드 사용자 테스트",
+      "location": "",
+      "remarks": "",
+      "details": "2건 의견 등록"
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "배전/산특 협력사 품질등급 시범운영 효과 집계 - 김원호B",
+      "location": "",
+      "remarks": "팀장(6/28일)",
+      "details": "1.양식 작성 노정현 부장 공유"
+    }
+  ],
+  "2026-07-02": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "[LS전선] 배전 IMK용 철드럼 성적서 양식 배포",
+      "location": "",
+      "remarks": "",
+      "details": "- 대상: JS/주우진 차장, JK/이형곤 부장, BBN/이정현 차장"
+    },
+    {
+      "completed": true,
+      "planTime": "15:00",
+      "endTime": "16:00",
+      "todo": "배전Cable 외주품질 점검 회의",
+      "location": "100kV 내압장",
+      "remarks": "",
+      "details": "1.외주 외관 품질 검사 기준\n2.중고 목드럼 검사 기준 (*회의록)\n3.한미전선 URD 케이블 일정\n4.가온전선 현대엔지니어링 18/30kV 일정\n*장인영씨 요청사항: 모보의 경우 금요일 출장검사 일정 제외(*복귀시 교통체증으로 복귀 지연)"
+    },
+    {
+      "completed": true,
+      "planTime": "17:00",
+      "endTime": "17:30",
+      "todo": "주간업무 등록",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "17:30",
+      "endTime": "18:00",
+      "todo": "협력업체 Penalty 제도 개정 관련 팀 내부 보완 의견 요청",
+      "location": "",
+      "remarks": "팀장(~7/3까지 회신)",
+      "details": ""
+    }
+  ],
+  "2026-06-29": [
+    {
+      "completed": true,
+      "planTime": "10:00",
+      "endTime": "17:30",
+      "todo": "IMK용 철드럼 성적서 양식 작성",
+      "location": "",
+      "remarks": "",
+      "details": "구조 및 외관 검사성적서 초안 작성 후 비비앤스틸/이정현 차장에게 검토 요청 메일 발송"
+    }
+  ],
+  "2026-07-01": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "10:00",
+      "todo": "외주품질관리실적 파일 Update",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "10:40",
+      "endTime": "11:00",
+      "todo": "IMK용 철드럼 성적서 양식 수정",
+      "location": "",
+      "remarks": "",
+      "details": "통화: 지석엔지니어링/주우진 차장 의견(구조 성적서 4포인트 측정 -> 1포인트) 반영"
+    },
+    {
+      "completed": true,
+      "planTime": "11:00",
+      "endTime": "16:30",
+      "todo": "BW 2025년도 구매실적 정리",
+      "location": "",
+      "remarks": "팀장 요청",
+      "details": ""
+    }
+  ],
+  "2026-07-27": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "하계휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-29": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "하계휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-30": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "하계휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-31": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "하계휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-28": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "18:00",
+      "todo": "출장.한미전선",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-17": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "제헌절(공휴일)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-15": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "출장.유진통신",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "13:30",
+      "endTime": "15:00",
+      "todo": "7월 배전 품질회의",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-24": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "7월 재물조사",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "14:00",
+      "endTime": "18:00",
+      "todo": "휴가(0.5)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "한국가스공사 당진기지 케이블 외관 품질 이슈 검사내역 조사",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-14": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "18:00",
+      "todo": "휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-07": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "16:00",
+      "endTime": "18:00",
+      "todo": "휴가(2hr)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "교육 수강(2개 과정)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-21": [
+    {
+      "completed": true,
+      "planTime": "08:50",
+      "endTime": "09:05",
+      "todo": "금화전선_다온케이블向 22.9kV CNCV-W 60SQ 시스 외관 굴곡 발생 원인대책 요청 ",
+      "location": "",
+      "remarks": "",
+      "details": "금화전선 이명호 부장 전화 통화로 확인"
+    },
+    {
+      "completed": true,
+      "planTime": "09:15",
+      "endTime": "09:20",
+      "todo": "지앤피우드]플라스틱 드럼 CAD 도면 파일 접수 및 전달",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "10:05",
+      "endTime": "10:13",
+      "todo": "유진통신-김병주 팀장: 플라스틱 드럼 포장방법 개선 요청",
+      "location": "",
+      "remarks": "",
+      "details": "8/21 직납출하 림스케이블 상차사진관련 플라스틱 드럼 포장방법 개선 메일 발송\n김병주 팀장 전화 통화로 설명 완료"
+    },
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "15:00",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "16:00",
+      "endTime": "18:00",
+      "todo": "휴가(2hr)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-28": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "15:30",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "16:00",
+      "endTime": "18:00",
+      "todo": "휴가(2hr)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-09-23": [
+    {
+      "completed": false,
+      "planTime": "09:00",
+      "endTime": "",
+      "todo": "협력사 화면설계 미팅 참석",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": false,
+      "planTime": "14:00",
+      "endTime": "18:00",
+      "todo": "휴가(4Hr)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-09-28": [
+    {
+      "completed": false,
+      "planTime": "09:00",
+      "endTime": "18:00",
+      "todo": "연계휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-10-01": [
+    {
+      "completed": false,
+      "planTime": "09:00",
+      "endTime": "18:00",
+      "todo": "휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-10-02": [
+    {
+      "completed": false,
+      "planTime": "09:00",
+      "endTime": "18:00",
+      "todo": "휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-10-26": [
+    {
+      "completed": false,
+      "planTime": "09:00",
+      "endTime": "13:00",
+      "todo": "휴가(4Hr)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-11-11": [
+    {
+      "completed": false,
+      "planTime": "09:00",
+      "endTime": "18:00",
+      "todo": "창립기념일",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-06": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "09:40",
+      "todo": "외주 메일 정리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "10:00",
+      "endTime": "12:55",
+      "todo": "가공선 GSTACSR 410mm² 검사협정서 작성",
+      "location": "",
+      "remarks": "",
+      "details": "- 가공선/박상욱 과장: 외주시방서 요청\n- 김보경 팀장: 메탈링크 품질관리 담당자 연락처 요청"
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "메탈링크 특별감사 일정 수립 및 메일 발송",
+      "location": "",
+      "remarks": "",
+      "details": "1.일시: 7/9일 11시~\n2.5067 차량예약 완료\n3.감사일정 안내 메일 발송 완료"
+    },
+    {
+      "completed": true,
+      "planTime": "16:00",
+      "endTime": "17:10",
+      "todo": "배전 Steel Bobbin 성적서 개정",
+      "location": "",
+      "remarks": "",
+      "details": "- 수요자 점검란 삭제 처리하고, QMS 등록 또는 메일 송부 요청\n- 기존 점검표는 유지"
+    },
+    {
+      "completed": true,
+      "planTime": "17:55",
+      "endTime": "18:05",
+      "todo": "설문조사1 응답",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-07": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "설문조사2 응답",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "09:10",
+      "todo": "배전 Steel Bobbin 성적서 개정본 배포",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "10:55",
+      "endTime": "11:05",
+      "todo": "가온전선 현대엔지니어링(주)/현대제철 당진향 18/30kV 1X300SQ 메일 회신",
+      "location": "",
+      "remarks": "",
+      "details": "1.가온전선 자체 검사 진행 후 출하 승인 요청\n2.제출서류: 검사신청서, 검사성적서, 완제품 외관 검사 체크리스트 (*양식 첨부 송부)"
+    },
+    {
+      "completed": true,
+      "planTime": "14:00",
+      "endTime": "15:00",
+      "todo": "자작품 CNPE-W 325SQ(한전) 외피 시스 인장 부적합 대책 수립 회의",
+      "location": "전력동 2층 CORE 회의실",
+      "remarks": "팀장 주재",
+      "details": "팀즈로 참석"
+    },
+    {
+      "completed": true,
+      "planTime": "14:00",
+      "endTime": "16:00",
+      "todo": "핵심만 콕! 문제해결을 위한 실마리 찾기와 풀기 수강",
+      "location": "",
+      "remarks": "",
+      "details": "핵심만 콕! 문제해결을 위한 실마리 찾기와 풀기"
+    },
+    {
+      "completed": true,
+      "planTime": "14:50",
+      "endTime": "17:30",
+      "todo": "직납 및 출하 승인 검토",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "19:00",
+      "endTime": "19:30",
+      "todo": "지수 생일 케익 사기",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-08": [
+    {
+      "completed": true,
+      "planTime": "09:20",
+      "endTime": "09:30",
+      "todo": "외주품 입고처리",
+      "location": "",
+      "remarks": "",
+      "details": "- 백승민 차장 입고처리 요청 메신저로 접수"
+    },
+    {
+      "completed": true,
+      "planTime": "09:30",
+      "endTime": "",
+      "todo": "직납품 출하 승인 검토",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "1:30",
+      "endTime": "11:00",
+      "todo": "가공선 GSTACSR 410mm² 검사협정서 Review",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "10:55",
+      "endTime": "10:58",
+      "todo": "메탈링크(권혁태 차장) 품질감사 일정 확인 통화",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "11:50",
+      "endTime": "16:30",
+      "todo": "검사협정서 생성 챗봇 수정",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "14:00",
+      "endTime": "18:00",
+      "todo": "품질부문 W/S",
+      "location": "구미본관2층 화상회의실",
+      "remarks": "",
+      "details": "1.팀원 업무분석 -> AI구현 -> 사람이 하는 업무를 어떻게 하면 줄일 수 있는지?\n2."
+    }
+  ],
+  "2026-07-09": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "17:30",
+      "todo": "출장.메탈링크.특별 품질감사",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-10": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "10:00",
+      "todo": "출장검사 일정 정리(한미전선 35kV URD , 유진통신 품목추가 시험)",
+      "location": "",
+      "remarks": "",
+      "details": "금화전선, 지앤케이블 출장검사 취소: 자체검사로 전환"
+    },
+    {
+      "completed": true,
+      "planTime": "10:00",
+      "endTime": "12:15",
+      "todo": "외주 입고처리 및 직납출하/입고출하 승인",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "15:00",
+      "endTime": "16:40",
+      "todo": "7월 품질회의 자료 작성(외주품질현황)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "16:40",
+      "endTime": "16:45",
+      "todo": "출장비 및 시내교토이 정산",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "17:00",
+      "endTime": "",
+      "todo": "메탈링크.특별 품질감사 QMS등록",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-13": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "17:30",
+      "todo": "출장.한미전선",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-14": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "15:30",
+      "todo": "직납승인 및 입고처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "유진통신 특채처리 요청 정리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "메탈링크 품질감사 결과 공유 및 검사협정서 외 자료 송부",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "12:20",
+      "endTime": "12:56",
+      "todo": "한미전선] 가온전선 35kV URD 500MCM 자료 송부",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "신동기 차장 파일속성 프로그램",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "15:05",
+      "endTime": "16:!1",
+      "todo": "고객불만] 모보 품질보증각서 입수",
+      "location": "",
+      "remarks": "",
+      "details": "동방케이블판매로 납품된 모보 외주 22.9kV FR-CNCO-W 1X325SQ 규격 18드럼 외관 이상(*백화현상)"
+    }
+  ],
+  "2026-07-16": [
+    {
+      "completed": true,
+      "planTime": "09:20",
+      "endTime": "09:30",
+      "todo": "유진통신-인쇄오류 시정조치 발행",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "13:20",
+      "endTime": "13:40",
+      "todo": "유진통신공업 규격 추가 시험결과 사전검토 ",
+      "location": "",
+      "remarks": "",
+      "details": "(전화) 유진통신공업 김병주 팀장에게 KTR 성적서 발행후 QMS에 4M변경관리 등록 요청"
+    },
+    {
+      "completed": true,
+      "planTime": "14:00",
+      "endTime": "14:10",
+      "todo": "메탈링크 검사협정서 서명본 완료본 송부",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "16:10",
+      "endTime": "16:55",
+      "todo": "유진통신공업 규격(16SQ~50SQ) 추가 QMS 등록 및 승인 요청",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "17:10",
+      "endTime": "18:00",
+      "todo": "사이버 과정 수강",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-20": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "신기씨앤에스/한국가스공사 당진기지 고객불만 방문",
+      "location": "",
+      "remarks": "",
+      "details": "- 방문자: 배전QA/김해명 대리, 유진통신공업/김병주 팀장"
+    },
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "09:20",
+      "todo": "미출하 점검",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "입고 및 직납 출하 검토, 승인",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "12:45",
+      "endTime": "12:55",
+      "todo": "외주품 입고처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "13:30",
+      "endTime": "14:20",
+      "todo": "입고 및 직납 출하 검토, 승인",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "15:10",
+      "endTime": "15:30",
+      "todo": "사이버 강좌 시험 응시",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "17:10",
+      "endTime": "17:50",
+      "todo": "가공선 사다리꼴 연알류미늄선 검사협정서 초안 작성(*삼진전선)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-26": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "10:00",
+      "endTime": "11:30",
+      "todo": "배전 품질회의",
+      "location": "",
+      "remarks": "전력동2층 화상회의실",
+      "details": "- 팀즈로 참석"
+    },
+    {
+      "completed": true,
+      "planTime": "13:50",
+      "endTime": "14:15",
+      "todo": "삼진전선 검사협정서 수정 송부",
+      "location": "",
+      "remarks": "",
+      "details": "- 가공선개발생산팀 나경민 대리에게 시방서 확인 및 검사협정서 개정 발송"
+    }
+  ],
+  "2026-08-03": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "18:00",
+      "todo": "휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-22": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "09:10",
+      "todo": "가온전선 현대제철 자파 부적합 원인/대책서 요청 메일 발송",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "10:00",
+      "endTime": "17:50",
+      "todo": "입고처리 및 출하승인",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "14:00",
+      "endTime": "14:20",
+      "todo": "안전교육",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-21": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "회식",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-07-23": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "삼진전선 검사협정서, 4M변경관리준수 확약서 서류 송부",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "입고처리 & 직납/입고 출하 승인",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-04": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "18:00",
+      "todo": "하계휴가(7/28 대체)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-05": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "11:00",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "12:50",
+      "endTime": "13:00",
+      "todo": "외주품 검사로트 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "14:20",
+      "endTime": "14:31",
+      "todo": "아시아전선 F-CV 제품 성적서 양식 송부  & 난연시험 장소 승인",
+      "location": "",
+      "remarks": "",
+      "details": "- 가온전선 난연시험 진행 허용(*팀장 구두 승인 받음)"
+    },
+    {
+      "completed": true,
+      "planTime": "14:32",
+      "endTime": "14:36",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "14:00",
+      "endTime": "17:20",
+      "todo": "외주 협력사 Penalty 제도 개선안 협력업체별 안내 공문 배포 및 품질보증 제재조치 약정서 체결 진행",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "17:21",
+      "endTime": "17:25",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-06": [
+    {
+      "completed": true,
+      "planTime": "11:00",
+      "endTime": "11:25",
+      "todo": "금화전선- 시험검사 운영 방안 개선 회신",
+      "location": "",
+      "remarks": "",
+      "details": "출장검사 일정 안내 시 공지하는 내용을 적용하여 주시기 바랍니다.\n  1. 전기적 특성, 구조, 물성 검사\n     : IEC 60502-1 샘플시험 표 12 기준에 따라 수량을 준비해 주시기 바랍니다.\n최문성 이사 전화 통화하여 안내함"
+    },
+    {
+      "completed": true,
+      "planTime": "12:00",
+      "endTime": "13:30",
+      "todo": "부분장 점심식사 (주공, 한촌설렁탕)",
+      "location": "",
+      "remarks": "",
+      "details": "부문장, 배전품질보증팀 5명(정영학, 박아람, 김창석, 배정현, 장민지)"
+    },
+    {
+      "completed": true,
+      "planTime": "11:15",
+      "endTime": "17:00",
+      "todo": "[LS 2026 법정필수교육] 성희롱 예방 외 교육",
+      "location": "",
+      "remarks": "",
+      "details": "[LS 2026 법정필수교육] 성희롱 예방+개인정보보호+직장 내 장애인 인식개선+직장 내 괴롭힘 예방+인권존중(통합본)"
+    }
+  ],
+  "2026-08-11": [
+    {
+      "completed": true,
+      "planTime": "08:45",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "11:00",
+      "endTime": "12:00",
+      "todo": "배전사업본부 외주 협력사 분류 및 운영체계 구축 1차 회의",
+      "location": "전력동2층 화상회의실",
+      "remarks": "",
+      "details": "1. 1차 회의\n1) 일시/장소: 8월 11일(화) 11시 / 구미공장 전력동 2층 화상회의실(타 사업장 팀즈 연결)\n2) 참석 대상: 각 SPG 개발, 생산(생산관리), 공장구매, 동해관리, 상품구매, QA, 구매품질\n3) 안건: 첨부 엑셀 파일 내 정리 시트 및 평가 시트에 대해 아래 사항 논의\n   - SPG별 평가 대상 협력업체 및 ’25년 매입 현황 공유\n   - 부서별 평가 항목/점수화 기준 공유 및 의견 취합\n   - 평가 지표 합산 로직 및 등급 분류 기준 협의\n   - 향후 부서별 자체 평가 및 2차 회의 추진 일정 협의\n\n2. 향후 계획\n1) 1차 회의 후 각 부서별 협력사 자체 평가 진행 후 구매품질팀 취합(~8/17)\n2) 2차 회의: 관리 대상 업체 평가 결과 리뷰 및 업체 등급별 운영 방안 정리(8/19일 14시 예정)\n"
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "교육 ChatGPT로 쉽게 하는 파이썬 업무자동화 수강",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-10": [
+    {
+      "completed": true,
+      "planTime": "08:45",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "11:00",
+      "endTime": "11:30",
+      "todo": "지앤피우드] IMK PVC 드럼파손 관련 PVC 드럼 품질관련 정보 확인 요청",
+      "location": "",
+      "remarks": "",
+      "details": "- 드럼 납품업체: 지앤피우드\n- 드럼 제작업체: 신호코리아\n- 확인요청사항\n1)드럼에 대한 내구성자료(열온도) / 최대권취(무게)에 대한 증빙자료\n2)드럼 옥외 방치시 내구성확인\n"
+    },
+    {
+      "completed": true,
+      "planTime": "14:30",
+      "endTime": "17:30",
+      "todo": "교육 ChatGPT로 쉽게 하는 파이썬 업무자동화 수강",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-12": [
+    {
+      "completed": true,
+      "planTime": "08:40",
+      "endTime": "08:50",
+      "todo": "유진통신 완제품검사체크리스 작성관련 통화(김병주 팀장, 김신조)",
+      "location": "",
+      "remarks": "",
+      "details": "- 이슈사항: 현대엔지니어링 시핑마크 부착없이 입고되었으나, 출하승인 요청 메일의 완제품검사 체크리스상에는 일치라고 표기되어 있음(8/7일 출하분)\n- 요청사항: 실질적인 완제품검사 체크리스트를 관리할 것. 실물 확인후 갈메기 표시할 것."
+    },
+    {
+      "completed": true,
+      "planTime": "08:50",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "09:10",
+      "todo": "F-GV 원자재 MSDS Data sheet 와 GV 제품의 원재료 및 생산함에 있어 오염 물질이 포함되지 않았다.는 공문 요청",
+      "location": "",
+      "remarks": "",
+      "details": "- 업체명: 지앤피\n- 통화자: 이채일 팀장, 신현중 차장"
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "3187351 450/750V HFIX+(SE.) 4SQ (1/2.25) 검사재고 처리 관련",
+      "location": "",
+      "remarks": "",
+      "details": "3187351 450/750V HFIX+(SE.) 4SQ (1/2.25) 검사재고 처리 관련\n- 문제점: 검사로트 수량: 45000, 실제로트 수량: 90000 수량 불일치\n- 8/11일 오전까지는 검사로드 수량이 45000dl QMS로 넘어오지 않아 QMS 장애처리게시판 등록하였고, 생관에서 오후 16시에 45000이 동일 검사로트를 추가 입고함\n- 처리: 45000m 가용재고 처리"
+    }
+  ],
+  "2026-08-13": [
+    {
+      "completed": true,
+      "planTime": "09:15",
+      "endTime": "09:17",
+      "todo": "F-GV 원자재 MSDS Data sheet 와 GV 제품의 원재료 및 생산함에 있어 오염 물질이 포함되지 않았다.는 공문 송부",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "08:50",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "",
+      "todo": "QM View 생성",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-18": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "QM View 생성",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-27": [
+    {
+      "completed": true,
+      "planTime": "08:45",
+      "endTime": "17:30",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "09:30",
+      "endTime": "12:00",
+      "todo": "QMS 2.0 검사기준 및 성적서 화면설계",
+      "location": "본관 3층 솔루션",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "11:00",
+      "endTime": "12:00",
+      "todo": "배전사업본부 외주 협력사 분류 및 운영체계 구축 2차 회의 참석",
+      "location": "구미공장 전력동 글로벌 회의실",
+      "remarks": "불참(회의중복)",
+      "details": "1. 변경 일시: 8/27일(목) 오전 11시 (구미공장 전력동 글로벌 회의실 / 타 사업장 Teams 연결)\n2. 주요 안건: 부서별 평가 결과 리뷰 및 업체 등급별 운영방안 협의\n각 부서에서는 이번 주 8/21일(금)까지 평가 시트 업데이트 완료 후 회신 부탁드립니다.\n"
+    }
+  ],
+  "2026-08-19": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "09:11",
+      "todo": "지앤피우드]플라스틱 드럼 CAD 도면 및 자재정보 확인 요청",
+      "location": "",
+      "remarks": "",
+      "details": "- 설계/박은욱 차장 확인 결과 도면 없음, 한전 규격 적용\n- 지앤피우드/유선부 팀장 전화로 자료 확인 요청"
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "11:30",
+      "todo": "QM View 생성",
+      "location": "",
+      "remarks": "",
+      "details": "2021~2026년 생성 완료, 미생성 6건은 자재코드 삭제됨"
+    },
+    {
+      "completed": true,
+      "planTime": "12:45",
+      "endTime": "13:01",
+      "todo": "배전사업본부 외주 협력사 분류 및 운영체계 구축 엑셀시트 작성",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "18:00",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-20": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "11:15",
+      "endTime": "11:30",
+      "todo": "협력업체 품질 Penalty 운영 기준 개정 및 약정서 체결 요청 ▶Remind 메일 발송",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "11:45",
+      "endTime": "11:57",
+      "todo": "배전 협력업체 품질개선 과제 서면 평가 안내",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "8월 품질회의 자료 작성 (외주현황)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-24": [
+    {
+      "completed": true,
+      "planTime": "08:45",
+      "endTime": "17:30",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "08:50",
+      "endTime": "08:56",
+      "todo": "협력업체 품질 Penalty 운영 기준 개정 및 약정서 체결 요청 ▶Remind 메일 발송",
+      "location": "",
+      "remarks": "",
+      "details": "약정서 작성 주의사항 포함"
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "09:05",
+      "todo": "지앤피우드-신호코리아 플라스틱 드럼 개선계획 상세계획 확인 요청 메일 발송",
+      "location": "",
+      "remarks": "",
+      "details": "조득희 팀장 신호코리아 담당자 전화번호 확인 요청: 신호코리아 남범우 이사 : 010 5138 3771"
+    },
+    {
+      "completed": true,
+      "planTime": "14::00",
+      "endTime": "14:20",
+      "todo": "아시아전선 LV F(W)-CV 품목 추가 관련 제출 서류 검토",
+      "location": "",
+      "remarks": "",
+      "details": "1.가열 후 인장시험 데이터 없음: 김재식 이사와 통화 결과 8/7~8일경 완료 예상\n2.메일로 관련사항 QMS로 4M변경관리 등록 요청 메일 발송"
+    },
+    {
+      "completed": true,
+      "planTime": "14:25",
+      "endTime": "15:00",
+      "todo": "2026년 전사보안교육 수강(*인터넷)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-25": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "09:45",
+      "endTime": "09:50",
+      "todo": "원자재 MSDS Data sheet 와 제품의 원재료 및 생산함에 있어 오염 물질이 포함되지 않았다.는 공문 요청",
+      "location": "",
+      "remarks": "",
+      "details": "- 대상 외주사: 지앤피, 디케이씨, 유진통신공업\n- 확인: 메일(유진통신 김병주 티장), 전화(디케이씨 이창효 팀장)"
+    },
+    {
+      "completed": true,
+      "planTime": "13:30",
+      "endTime": "15:00",
+      "todo": "자재/상품 협력업체 모듈 화면설계 미팅 (협력사 성적서, 개선대책, 지표)",
+      "location": "",
+      "remarks": "",
+      "details": "본관 2층 회의실"
+    }
+  ],
+  "2026-09-01": [
+    {
+      "completed": true,
+      "planTime": "10:00",
+      "endTime": "11:00",
+      "todo": "외주품질 점검회의",
+      "location": "전력동2층 소통회의실",
+      "remarks": "장인영, 김재호",
+      "details": "- 참석자: 팀장, 김재호, 장인영\n- 외주품질관련 주의사항 전달, 통합계정 신청, PC대여 신청"
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "사이버 강좌 수강",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-08-31": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": "- LS-VINA 입고승인처리"
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "Lessons Learned Card 생성",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "11:00",
+      "endTime": "13:05",
+      "todo": "'26년 유해화학물질 종사자 교육",
+      "location": "온라인(https://edunics.mcee.go.kr/)",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "11:30",
+      "endTime": "12:00",
+      "todo": "8월 구매품질팀 안전보건교육",
+      "location": "전력동2층 글로벌 회의실 ",
+      "remarks": "",
+      "details": "1.날 짜 : 2026.8.31 (월요일)\n2.시 간 : 11:30 ~ \n3.장 소 : 전력동 2층 글로벌 회의실 (인동, 동해공장: 화상 연결)\n4.내 용 :‘26년 8월 HSE 안전 보건 교육 (화재/폭발사고 예방 교육)\n- HSE 게시 안전교육 동영상, 자료 등\n- 중대재해 및 대외 동향\n- 기타사항 논의\n"
+    }
+  ],
+  "2026-09-04": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "18:00",
+      "todo": "휴가",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-09-22": [
+    {
+      "completed": false,
+      "planTime": "09:30",
+      "endTime": "",
+      "todo": "1 on 1 미팅",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": false,
+      "planTime": "13:30",
+      "endTime": "15:00",
+      "todo": "품질회의",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-09-02": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "GToss 김재호 MS365 통합계정 신청",
+      "location": "",
+      "remarks": "",
+      "details": "임직원외(현채인포함) 인원 계정 신청 :  WeLS > Work Place > IT요청(G-TOSS) > 서비스요청 > M365운영서비스 > 작업유형 : M365통합계정관리- 사용자 계정 신청 에 내용 입력 후 승인요청\n( 신청 시 보안서약서 첨부 필요, 보안서약서 양식은 G-TOSS > 커뮤니티 > 자료실에서 확인 가능) \n 부서명 검색하여 선택\n사번은 원하는 ID 입력(예 : aaaa, 이메일주소와 동일하게 입력   (반드시 체크!!! 중요!!!!!), _(언더바) 사용 불가)\n사용자 유형 : 협력직(90)\n이메일주소 : 사번과 동일하게 입력    (반드시 체크!!! 중요!!!!!) (예 : aaaa,  _(언더바) 사용 불가)\n개인이메일주소 : 소속회사 이메일주소 또는 개인이메일주소 (초기 비밀번호 발송 또는 비번 초기화 시 사용됨)\n원하는 기능 사용여부 체크\nTeams 사용 필요 시 라이선스는 M365F3 선택"
+    }
+  ],
+  "2026-09-11": [
+    {
+      "completed": true,
+      "planTime": "09:30",
+      "endTime": "10:00",
+      "todo": "김재호씨 사무용품 인계, QMS, ERP 사용관련 사항 전달 교육",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "09:30",
+      "endTime": "10:25",
+      "todo": "품질개선 협약사항 및 개선과제 평가서 미접수 외주사 리마인드 메일 발송",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "10:10",
+      "endTime": "10:16",
+      "todo": "김재호씨 QMS 추가 사용 화면 메일 요청",
+      "location": "",
+      "remarks": "",
+      "details": "- 추가 사용화면: 미처리문서, 기준서 일괄승인"
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "품질부문장 대시보드 공정감사실적 입력",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "14:00",
+      "endTime": "18:00",
+      "todo": "휴가(4hr)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-09-03": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "09:45",
+      "endTime": "09:50",
+      "todo": "IT Service 김재호 VPN ID 및 ERP 권한 등록 신청",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-09-29": [
+    {
+      "completed": false,
+      "planTime": "10:00",
+      "endTime": "11:00",
+      "todo": "품질개선 성과 공유회",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-09-10": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "김해호 조장 QMS 사용자 등록 완료",
+      "location": "",
+      "remarks": "김기훈 차장 등록",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "품질개선 협약사항 및 개선과제 평가서 접수 마감",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-09-18": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "인동공장 LAN공사 HSE 공사 허가 신청 등록",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "13:55",
+      "endTime": "",
+      "todo": "지앤피우드(신호코리아) PVC 드럼 개선대책 실적 보고서 접수(2차)",
+      "location": "",
+      "remarks": "팀장 검토 요청",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "배전 외주 품질개선 성과공유회 자료 작성",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-09-07": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "09:30",
+      "endTime": "11:00",
+      "todo": "김재호 PC환경 설정",
+      "location": "",
+      "remarks": "",
+      "details": "- VPN설정, 아웃룩 VBA설정, PSQMS 사용자 등록\n- 문규류 신청: 폴더, 형광펜, 볼펜(삼색), Steel자(15cm) -> 장인영/김재호\n- 추가 신청: LS GPT, QMS사용신청(하영민C, 신청메일)"
+    }
+  ],
+  "2026-09-08": [
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "09:21",
+      "endTime": "09:21",
+      "todo": "김재호氏 LS GPT, ERP ID 승인 완료",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "품질보증 제재조치 약정서 정리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-09-09": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "09:30",
+      "endTime": "",
+      "todo": "아시아전선 품목 추가 QMS 검토",
+      "location": "",
+      "remarks": "",
+      "details": "- 김재식 이사 전화로 승인 결과 통보"
+    },
+    {
+      "completed": true,
+      "planTime": "14:55",
+      "endTime": "15:10",
+      "todo": "지앤피우드(신호코리아) PVC 드럼 개선대책 실적 점검 파일 요청",
+      "location": "",
+      "remarks": "",
+      "details": "- 유선부 팀장에게 전화로 PVC 드럼 개선대책 실적 점검 파일 요청: 9/15일 까지 자료 접수 예정"
+    }
+  ],
+  "2026-09-14": [
+    {
+      "completed": true,
+      "planTime": "09:20",
+      "endTime": "09:52",
+      "todo": "동일전선, 대륭전선 CheckList 제안",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "10:52",
+      "endTime": "10:55",
+      "todo": "지앤피우드 개선대책서 제출관련 내용 협의(*유선부 팀장)",
+      "location": "전화",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "14:00",
+      "endTime": "",
+      "todo": "외주협력사 3분기 LLC 공유 자료 배포",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "15:00",
+      "endTime": "",
+      "todo": "품질개선 협약사항 및 개선과제 평가서 미접수 협력사 점검",
+      "location": "",
+      "remarks": "아시아전선, 지앤케이블",
+      "details": "- 접수완료: 금화전선(9/11), 천일씨아이엘(9/14)"
+    },
+    {
+      "completed": true,
+      "planTime": "16:00",
+      "endTime": "",
+      "todo": "2026년 LS전선 조직역량 서베이 참여",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-09-15": [
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "",
+      "todo": "4분기 출장검사 기준 수립",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "전수열 인동공장 MV검사장 LAN선 연결 문의",
+      "location": "",
+      "remarks": "",
+      "details": "견적금액: 130만원 (*LAN선 2가닥, 전화기) -> 팀장 진행의견"
+    },
+    {
+      "completed": true,
+      "planTime": "14:30",
+      "endTime": "14:44",
+      "todo": "김재호씨 메일 용량증설 (450MB -> 2GB)",
+      "location": "",
+      "remarks": "DT지원팀 유용팔 부장",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "2026년 일반직 연말평가 실시",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ],
+  "2026-09-17": [
+    {
+      "completed": true,
+      "planTime": "08:45",
+      "endTime": "",
+      "todo": "직납 및 입고 승인 처리",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "09:00",
+      "endTime": "10:00",
+      "todo": "9월 품질회의 자료 작성 (*8월 외주품질현황)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "13:30",
+      "endTime": "17:30",
+      "todo": "협력사 화면설계 미팅 참석",
+      "location": "본관 3층 문서고",
+      "remarks": "고정일 상무",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "품질재고 -> 가용재고 전환",
+      "location": "",
+      "remarks": "생산관리 입고 취소",
+      "details": ""
+    }
+  ],
+  "2026-09-16": [
+    {
+      "completed": true,
+      "planTime": "09:20",
+      "endTime": "09:54",
+      "todo": "김재호씨 아웃룩 환경 설정 작업",
+      "location": "",
+      "remarks": "",
+      "details": "- 파일 이동 데이터 파일 생성 및 사용 방법 교육\n- VBA 출장검사 일정 폼 변경작업(품질 등급제 반영 샘플 검사수량 적용 기능 추가) "
+    },
+    {
+      "completed": true,
+      "planTime": "11:30",
+      "endTime": "",
+      "todo": "배전 외주 품질개선 성과공유회 자료 작성",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "12:00",
+      "endTime": "",
+      "todo": "2026년 일반직 연말평가 실시 (확정)",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": true,
+      "planTime": "13:30",
+      "endTime": "13:39",
+      "todo": "지앤피우드(신호코리아) PVC 드럼 개선대책 실적 점검 F/U",
+      "location": "",
+      "remarks": "검토 결과 회신 완료",
+      "details": "1.자료의 구성은 지앤피우드 QA가 플라스틱 드럼 제작사인 신호코리아를 ‘신호코리아’에서 제출하였던 품질개선대서의 내용에 대해서 실행 내용별 유효성 점검을 했다는 내용으로 작성을 하셔야 합니다.\n2.개선대책 유효성 확인 및 결과 정리 순서\n1) 8/24일 제출하셨던 [ 권선 작업 중 드럼 파손 방지 및 품질 개선 대책서V1]의\n   ‘3. 당사 수립 재발 방지 및 개선 대책, 4. 향후 조치 및 공급 계획’내용에 대해 항목별로 계획 대비 실행결과를 정리하셔야 합니다.\n2) 출하 전 단계별 품질 검사 프로세스에 대해서도 단계별로 구체적인 실행내용 기술 및 증빙이 있어야 합니다.\n   *특히, 원자재 검사 (이물질 혼입 여부 선별 검사)에 대한 변경사항 기술이 있어야 합니다."
+    },
+    {
+      "completed": true,
+      "planTime": "",
+      "endTime": "",
+      "todo": "품질재고 -> 가용재고 전환",
+      "location": "",
+      "remarks": "김재호, 정한솔",
+      "details": "- 대상자재: 3204044, 3204045, 3204046"
+    }
+  ],
+  "2026-09-21": [
+    {
+      "completed": false,
+      "planTime": "",
+      "endTime": "",
+      "todo": "품질 제재조치 약정서 발송 접수",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": false,
+      "planTime": "",
+      "endTime": "",
+      "todo": "배전 외주 품질개선 성과공유회 자료 작성",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    },
+    {
+      "completed": false,
+      "planTime": "",
+      "endTime": "",
+      "todo": "이행점검 Caravan 전화 인터뷰 마감",
+      "location": "",
+      "remarks": "",
+      "details": ""
+    }
+  ]
+}
