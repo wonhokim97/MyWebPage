@@ -861,37 +861,42 @@
 
                 const filePath = resolvedConfig.filePath;
                 const repoUrl = `https://api.github.com/repos/${resolvedConfig.owner}/${resolvedConfig.repoName}/contents/${encodeURIComponent(filePath).replace(/%2F/g, '/')}`;
+
+                async function putContentWithSha(shaOverride = null) {
+                    const payload = getDatabasePayload();
+                    const encryptedPayload = await encryptData(JSON.stringify(payload, null, 2), password);
+
+                    let binaryStr = '';
+                    const enc = new TextEncoder().encode(encryptedPayload);
+                    const chunkSize = 8192;
+                    for (let i = 0; i < enc.length; i += chunkSize) {
+                        binaryStr += String.fromCharCode(...enc.slice(i, i + chunkSize));
+                    }
+                    const content = btoa(binaryStr);
+                    const requestBody = {
+                        message: `업데이트: ${new Date().toISOString()}`,
+                        content,
+                        branch: resolvedConfig.branch
+                    };
+
+                    if (shaOverride) {
+                        requestBody.sha = shaOverride;
+                    }
+
+                    return fetch(repoUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Accept': 'application/vnd.github+json',
+                            'Authorization': `Bearer ${resolvedConfig.token}`,
+                            'Content-Type': 'application/json',
+                            'X-GitHub-Api-Version': '2022-11-28'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                }
+
                 const existing = await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
-                const payload = getDatabasePayload();
-                const encryptedPayload = await encryptData(JSON.stringify(payload, null, 2), password);
-
-                let binaryStr = '';
-                const enc = new TextEncoder().encode(encryptedPayload);
-                const chunkSize = 8192;
-                for (let i = 0; i < enc.length; i += chunkSize) {
-                    binaryStr += String.fromCharCode(...enc.slice(i, i + chunkSize));
-                }
-                const content = btoa(binaryStr);
-                const requestBody = {
-                    message: `업데이트: ${new Date().toISOString()}`,
-                    content,
-                    branch: resolvedConfig.branch
-                };
-
-                if (existing && existing.sha) {
-                    requestBody.sha = existing.sha;
-                }
-
-                const response = await fetch(repoUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Accept': 'application/vnd.github+json',
-                        'Authorization': `Bearer ${resolvedConfig.token}`,
-                        'Content-Type': 'application/json',
-                        'X-GitHub-Api-Version': '2022-11-28'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
+                const response = await putContentWithSha(existing && existing.sha ? existing.sha : null);
 
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -906,23 +911,17 @@
                     if (isConflict) {
                         const refreshed = await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
                         if (refreshed && refreshed.sha) {
-                            requestBody.sha = refreshed.sha;
-                            const retryResponse = await fetch(repoUrl, {
-                                method: 'PUT',
-                                headers: {
-                                    'Accept': 'application/vnd.github+json',
-                                    'Authorization': `Bearer ${resolvedConfig.token}`,
-                                    'Content-Type': 'application/json',
-                                    'X-GitHub-Api-Version': '2022-11-28'
-                                },
-                                body: JSON.stringify(requestBody)
-                            });
+                            const retryResponse = await putContentWithSha(refreshed.sha);
                             if (!retryResponse.ok) {
                                 const retryText = await retryResponse.text();
                                 throw new Error(`GitHub 업로드 실패: ${retryResponse.status} ${retryText}`);
                             }
                         } else {
-                            throw new Error(`GitHub 업로드 실패: ${response.status} ${parsedMessage}`);
+                            const retryResponse = await putContentWithSha(null);
+                            if (!retryResponse.ok) {
+                                const retryText = await retryResponse.text();
+                                throw new Error(`GitHub 업로드 실패: ${retryResponse.status} ${retryText}`);
+                            }
                         }
                     } else {
                         throw new Error(`GitHub 업로드 실패: ${response.status} ${parsedMessage}`);
