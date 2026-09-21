@@ -1926,6 +1926,11 @@
 
     async function uploadToGitHub() {
         try {
+            if (!appPassword) {
+                alert('GitHub에 저장하려면 비밀번호를 먼저 설정하거나 로그인해 주세요.');
+                return;
+            }
+
             const config = getGithubRepoParts();
             if (!config.token) {
                 alert('GitHub Personal Access Token을 먼저 저장해 주세요.');
@@ -1938,9 +1943,10 @@
             const existing = await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
 
             const payload = JSON.stringify(plannerDatabase, null, 2);
-            const content = btoa(unescape(encodeURIComponent(payload)));
+            const encryptedPayload = await encryptData(payload, appPassword);
+            const content = btoa(unescape(encodeURIComponent(encryptedPayload)));
             const body = {
-                message: `Update planner data ${new Date().toISOString()}`,
+                message: `Update encrypted planner data ${new Date().toISOString()}`,
                 content,
                 branch: resolvedConfig.branch
             };
@@ -1963,7 +1969,7 @@
                 throw new Error(`GitHub 업로드 실패: ${response.status} ${errorText}`);
             }
 
-            updateStatus('GitHub에 데이터 저장 완료');
+            updateStatus('GitHub에 암호화된 데이터 저장 완료');
         } catch (err) {
             console.error(err);
             alert('GitHub 저장 실패: ' + err.message);
@@ -1973,6 +1979,11 @@
 
     async function downloadFromGitHub() {
         try {
+            if (!appPassword) {
+                alert('GitHub에서 복호화하려면 비밀번호를 먼저 설정하거나 로그인해 주세요.');
+                return;
+            }
+
             const config = getGithubRepoParts();
             if (!config.token) {
                 alert('GitHub Personal Access Token을 먼저 저장해 주세요.');
@@ -2005,13 +2016,25 @@
                 .map(char => `%${('00' + char.charCodeAt(0).toString(16)).slice(-2)}`)
                 .join(''));
 
-            const parsed = JSON.parse(decoded);
+            let parsed = {};
+            try {
+                const decrypted = await decryptData(decoded, appPassword);
+                parsed = JSON.parse(decrypted);
+            } catch (decryptErr) {
+                try {
+                    parsed = JSON.parse(decoded);
+                    console.log('기존 GitHub 평문 데이터 호환 처리됨.');
+                } catch (jsonErr) {
+                    throw new Error('GitHub 데이터 복호화 실패: 비밀번호가 올바르지 않거나 파일이 손상되었습니다.');
+                }
+            }
+
             plannerDatabase = parsed && typeof parsed === 'object' ? parsed : {};
             handleSearch();
             renderCalendar();
             const selectedDate = document.getElementById('memo-title').value.trim() || getTodayStr();
             loadDatePlanner(selectedDate in plannerDatabase ? selectedDate : getTodayStr());
-            updateStatus('GitHub에서 데이터 불러오기 완료');
+            updateStatus('GitHub에서 암호화된 데이터 불러오기 완료');
         } catch (err) {
             console.error(err);
             alert('GitHub 불러오기 실패: ' + err.message);
