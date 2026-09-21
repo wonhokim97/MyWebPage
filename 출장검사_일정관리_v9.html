@@ -46,6 +46,13 @@
         
         <!-- 헤더 제어 기능 그룹 (로컬폴더 연동 -> 화면모드 설정 단추 순 배치) -->
         <div class="flex items-center space-x-5">
+            <div id="profile-status-area" class="flex items-center">
+                <button onclick="openPasswordModal()" id="active-profile-badge" class="hidden items-center gap-1.5 bg-slate-800/60 border border-slate-700/50 text-slate-200 px-2.5 py-1.5 rounded-full text-[10px] font-semibold hover:bg-slate-800">
+                    <i class="fa-solid fa-user-shield text-[9px]"></i>
+                    <span id="active-profile-label">ID</span>
+                </button>
+            </div>
+
             <!-- 로컬 폴더 자동 저장 연동 영역 (헤더 탑재용 컴팩트 뷰) -->
             <div id="folder-status-area" class="flex items-center">
                 <!-- JS에 의해 상태별 UI 동적 렌더링 -->
@@ -99,7 +106,7 @@
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-400 mb-1">저장 파일 경로</label>
-                    <input id="github-file-input" type="text" value="data.json" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input id="github-file-input" type="text" value="travel_enc.json" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-400 mb-1">GitHub Personal Access Token</label>
@@ -109,6 +116,40 @@
             <div class="flex justify-end space-x-2 mt-5">
                 <button onclick="closeGitHubSettingsModal()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs">취소</button>
                 <button onclick="saveGitHubSettings()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded text-xs shadow-md">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="password-profile-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[60] no-print">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-2xl w-[460px] max-w-[calc(100vw-2rem)] border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">ID / 비밀번호 설정</h3>
+                <button onclick="closePasswordModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">사용자 ID</label>
+                    <input id="profile-id-input" type="text" placeholder="예: admin, user1" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">비밀번호</label>
+                    <input id="profile-password-input" type="password" placeholder="비밀번호 입력" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">비밀번호 확인</label>
+                    <input id="profile-password-confirm-input" type="password" placeholder="비밀번호 재입력" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 p-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">저장된 ID 목록</span>
+                        <button type="button" onclick="clearAllPasswordProfiles()" class="text-[10px] text-rose-500 hover:text-rose-600 font-semibold">전체 삭제</button>
+                    </div>
+                    <div id="password-profile-list" class="space-y-1.5 max-h-28 overflow-y-auto"></div>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 mt-5">
+                <button onclick="closePasswordModal()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs">취소</button>
+                <button onclick="savePasswordProfile()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded text-xs shadow-md">저장</button>
             </div>
         </div>
     </div>
@@ -371,24 +412,25 @@
         let appPassword = localStorage.getItem('travelschedule-password') || '';
 
         function ensureAppPassword() {
-            if (appPassword) return appPassword;
+            const currentId = getCurrentProfileId();
+            const profiles = loadPasswordProfiles();
 
-            const savedPassword = localStorage.getItem('travelschedule-password');
-            if (savedPassword) {
-                appPassword = savedPassword;
+            if (profiles[currentId]) {
+                appPassword = profiles[currentId];
+                localStorage.setItem(LEGACY_PASSWORD_KEY, appPassword);
                 return appPassword;
             }
 
-            const input = window.prompt('데이터 암호를 설정하세요. 이 비밀번호로 로컬/ GitHub 데이터가 암호화됩니다.', '');
-            const nextPassword = (input || '').trim();
-            if (!nextPassword) {
-                appPassword = 'travel-schedule-default';
-            } else {
-                appPassword = nextPassword;
+            const legacyPassword = localStorage.getItem(LEGACY_PASSWORD_KEY);
+            if (legacyPassword) {
+                appPassword = legacyPassword;
+                profiles[currentId] = appPassword;
+                savePasswordProfiles(profiles);
+                return appPassword;
             }
 
-            localStorage.setItem('travelschedule-password', appPassword);
-            return appPassword;
+            openPasswordModal();
+            throw new Error('비밀번호를 먼저 설정해 주세요.');
         }
 
         async function getKey(password, salt) {
@@ -454,12 +496,167 @@
         }
 
         const GITHUB_CONFIG_KEY = 'travelschedule_github_config';
+        const APP_DATA_FILE_NAME = 'travel_enc.json';
+        const PASSWORD_PROFILES_KEY = 'travelschedule_password_profiles';
+        const CURRENT_PROFILE_ID_KEY = 'travelschedule_current_profile_id';
+        const LEGACY_PASSWORD_KEY = 'travelschedule-password';
+
+        function getAppDataFileName() {
+            return APP_DATA_FILE_NAME;
+        }
+
+        function getCurrentProfileId() {
+            return localStorage.getItem(CURRENT_PROFILE_ID_KEY) || 'default';
+        }
+
+        function setCurrentProfileId(id) {
+            if (!id) return;
+            localStorage.setItem(CURRENT_PROFILE_ID_KEY, String(id).trim());
+        }
+
+        function loadPasswordProfiles() {
+            try {
+                const raw = localStorage.getItem(PASSWORD_PROFILES_KEY);
+                if (!raw) return {};
+                const parsed = JSON.parse(raw);
+                return parsed && typeof parsed === 'object' ? parsed : {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function savePasswordProfiles(profiles) {
+            localStorage.setItem(PASSWORD_PROFILES_KEY, JSON.stringify(profiles || {}));
+        }
+
+        function renderPasswordProfileList() {
+            const list = document.getElementById('password-profile-list');
+            const profiles = loadPasswordProfiles();
+            const ids = Object.keys(profiles);
+
+            const activeId = getCurrentProfileId();
+            const badge = document.getElementById('active-profile-badge');
+            const badgeLabel = document.getElementById('active-profile-label');
+            if (activeId && profiles[activeId]) {
+                badgeLabel.innerText = activeId;
+                badge.classList.remove('hidden');
+                badge.classList.add('inline-flex');
+            } else {
+                badgeLabel.innerText = 'ID';
+                badge.classList.add('hidden');
+                badge.classList.remove('inline-flex');
+            }
+
+            if (!ids.length) {
+                list.innerHTML = '<div class="text-[10px] text-slate-400">저장된 ID가 없습니다.</div>';
+                return;
+            }
+
+            list.innerHTML = ids.map(id => {
+                const isActive = getCurrentProfileId() === id;
+                return `
+                    <div class="flex items-center justify-between gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5">
+                        <button type="button" onclick="selectPasswordProfile('${escapeHtml(id)}')" class="flex-1 text-left ${isActive ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-slate-600 dark:text-slate-300'}">
+                            ${escapeHtml(id)} ${isActive ? '(현재)' : ''}
+                        </button>
+                        <button type="button" onclick="deletePasswordProfile('${escapeHtml(id)}')" class="text-[10px] text-rose-500 hover:text-rose-600">삭제</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openPasswordModal() {
+            const profiles = loadPasswordProfiles();
+            const currentId = getCurrentProfileId();
+            document.getElementById('profile-id-input').value = currentId || 'default';
+            document.getElementById('profile-password-input').value = profiles[currentId] || '';
+            document.getElementById('profile-password-confirm-input').value = profiles[currentId] || '';
+            renderPasswordProfileList();
+            document.getElementById('password-profile-modal').classList.remove('hidden');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('password-profile-modal').classList.add('hidden');
+        }
+
+        function selectPasswordProfile(id) {
+            const profiles = loadPasswordProfiles();
+            if (!profiles[id]) return;
+            setCurrentProfileId(id);
+            document.getElementById('profile-id-input').value = id;
+            document.getElementById('profile-password-input').value = profiles[id];
+            document.getElementById('profile-password-confirm-input').value = profiles[id];
+            renderPasswordProfileList();
+        }
+
+        function deletePasswordProfile(id) {
+            const profiles = loadPasswordProfiles();
+            if (!profiles[id]) return;
+            delete profiles[id];
+            savePasswordProfiles(profiles);
+            const currentId = getCurrentProfileId();
+            if (currentId === id) {
+                const nextId = Object.keys(profiles)[0] || 'default';
+                setCurrentProfileId(nextId);
+                if (profiles[nextId]) {
+                    appPassword = profiles[nextId];
+                    localStorage.setItem(LEGACY_PASSWORD_KEY, appPassword);
+                } else {
+                    appPassword = '';
+                    localStorage.removeItem(LEGACY_PASSWORD_KEY);
+                }
+            }
+            renderPasswordProfileList();
+            addLog(`ID '${id}' 비밀번호를 삭제했습니다.`);
+        }
+
+        function clearAllPasswordProfiles() {
+            if (!confirm('모든 ID 비밀번호를 삭제하시겠습니까?')) return;
+            savePasswordProfiles({});
+            setCurrentProfileId('default');
+            appPassword = '';
+            localStorage.removeItem(LEGACY_PASSWORD_KEY);
+            renderPasswordProfileList();
+            document.getElementById('profile-id-input').value = 'default';
+            document.getElementById('profile-password-input').value = '';
+            document.getElementById('profile-password-confirm-input').value = '';
+            addLog('모든 ID 비밀번호가 삭제되었습니다.');
+        }
+
+        function savePasswordProfile() {
+            const id = document.getElementById('profile-id-input').value.trim();
+            const password = document.getElementById('profile-password-input').value;
+            const confirmPassword = document.getElementById('profile-password-confirm-input').value;
+
+            if (!id) {
+                alert('ID를 입력해 주세요.');
+                return;
+            }
+            if (!password) {
+                alert('비밀번호를 입력해 주세요.');
+                return;
+            }
+            if (password !== confirmPassword) {
+                alert('비밀번호와 비밀번호 확인 값이 일치하지 않습니다.');
+                return;
+            }
+
+            const profiles = loadPasswordProfiles();
+            profiles[id] = password;
+            savePasswordProfiles(profiles);
+            appPassword = password;
+            setCurrentProfileId(id);
+            localStorage.setItem(LEGACY_PASSWORD_KEY, password);
+            renderPasswordProfileList();
+            closePasswordModal();
+            addLog(`ID '${id}' 비밀번호가 저장되었습니다.`);
+        }
 
         function getDefaultGithubConfig() {
             return {
                 repo: '',
                 branch: 'main',
-                filePath: 'data.json',
+                filePath: getAppDataFileName(),
                 token: ''
             };
         }
@@ -481,9 +678,10 @@
 
         function openGitHubSettingsModal() {
             const config = loadGithubConfig();
+            const safeFilePath = config.filePath || getAppDataFileName();
             document.getElementById('github-repo-input').value = config.repo || '';
             document.getElementById('github-branch-input').value = config.branch || 'main';
-            document.getElementById('github-file-input').value = config.filePath || 'data.json';
+            document.getElementById('github-file-input').value = safeFilePath;
             document.getElementById('github-token-input').value = config.token || '';
             document.getElementById('github-settings-modal').classList.remove('hidden');
         }
@@ -511,7 +709,10 @@
             const rawRepo = document.getElementById('github-repo-input').value.trim();
             const repo = normalizeGithubRepoInput(rawRepo);
             const branch = document.getElementById('github-branch-input').value.trim() || 'main';
-            const filePath = document.getElementById('github-file-input').value.trim() || 'data.json';
+            let filePath = document.getElementById('github-file-input').value.trim();
+            if (!filePath || filePath.toLowerCase() === 'data.json' || filePath.toLowerCase() === 'travel_enc.json') {
+                filePath = getAppDataFileName();
+            }
             const token = document.getElementById('github-token-input').value.trim();
 
             if (!repo || !repo.includes('/')) {
@@ -537,11 +738,12 @@
                 throw new Error('GitHub 저장소 주소가 올바르지 않습니다. 예: owner/repository 또는 https://github.com/owner/repository');
             }
 
+            const filePath = (config.filePath || getAppDataFileName()).trim().replace(/^\/+/, '') || getAppDataFileName();
             return {
                 owner: parts[0],
                 repoName: parts.slice(1).join('/'),
                 branch: (config.branch || '').trim() || '',
-                filePath: (config.filePath || 'data.json').trim().replace(/^\/+/, '') || 'data.json',
+                filePath: filePath.toLowerCase() === 'data.json' ? getAppDataFileName() : filePath,
                 token: (config.token || '').trim()
             };
         }
@@ -898,7 +1100,20 @@
 
         async function initFolderData() {
             try {
-                const fileHandle = await dirHandle.getFileHandle('data.json', { create: true });
+                const appDataFileName = getAppDataFileName();
+                const legacyFileName = 'data.json';
+
+                let fileHandle;
+                try {
+                    fileHandle = await dirHandle.getFileHandle(appDataFileName, { create: false });
+                } catch (e) {
+                    try {
+                        fileHandle = await dirHandle.getFileHandle(legacyFileName, { create: false });
+                    } catch (legacyErr) {
+                        fileHandle = await dirHandle.getFileHandle(appDataFileName, { create: true });
+                    }
+                }
+
                 const file = await fileHandle.getFile();
                 const fileText = await file.text();
 
@@ -931,7 +1146,7 @@
                 } else {
                     folderConnected = true;
                     await saveDatabase();
-                    addLog("기존 작성 데이터를 '" + dirHandle.name + "/data.json'에 저장했습니다.");
+                    addLog("기존 작성 데이터를 '" + dirHandle.name + "/" + getAppDataFileName() + "'에 저장했습니다.");
                 }
 
                 updateFolderUI('connected');
@@ -980,13 +1195,14 @@
 
             if (folderConnected && dirHandle) {
                 try {
-                    const fileHandle = await dirHandle.getFileHandle('data.json', { create: true });
+                    const dataFileName = getAppDataFileName();
+                    const fileHandle = await dirHandle.getFileHandle(dataFileName, { create: true });
                     const writable = await fileHandle.createWritable();
                     const payload = { companies, inspectors, pjts, schedules };
                     const encrypted = await encryptData(JSON.stringify(payload, null, 2), ensureAppPassword());
                     await writable.write(encrypted);
                     await writable.close();
-                    addLog("실시간 자동 저장 완료 (" + dirHandle.name + "/data.json)");
+                    addLog("실시간 자동 저장 완료 (" + dirHandle.name + "/" + dataFileName + ")");
                     return;
                 } catch (e) {
                     folderConnected = false;
