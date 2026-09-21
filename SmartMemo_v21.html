@@ -1946,9 +1946,16 @@
             const content = btoa(String.fromCharCode(...new TextEncoder().encode(encryptedPayload)));
 
             async function performUploadWithRetry(forceRefresh = false) {
-                const existing = forceRefresh
-                    ? await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token)
-                    : await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
+                const existing = await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
+                const existingSha = existing && existing.sha ? existing.sha : null;
+                console.log('[GitHub upload]', {
+                    forceRefresh,
+                    owner: resolvedConfig.owner,
+                    repo: resolvedConfig.repoName,
+                    branch: resolvedConfig.branch,
+                    filePath: resolvedConfig.filePath,
+                    existingSha
+                });
 
                 const body = {
                     message: `Update encrypted planner data ${new Date().toISOString()}`,
@@ -1956,7 +1963,7 @@
                     branch: resolvedConfig.branch
                 };
 
-                if (existing && existing.sha) body.sha = existing.sha;
+                if (existingSha) body.sha = existingSha;
 
                 const response = await fetch(repoUrl, {
                     method: 'PUT',
@@ -1981,8 +1988,39 @@
                     const isShaMismatch = (response.status === 409 || response.status === 422)
                         && /does not match|sha/i.test(apiMessage);
 
-                    if (isShaMismatch && !forceRefresh) {
-                        return performUploadWithRetry(true);
+                    console.log('[GitHub mismatch]', {
+                        status: response.status,
+                        message: apiMessage,
+                        existingSha,
+                        forceRefresh
+                    });
+
+                    if (isShaMismatch) {
+                        const refreshed = await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
+                        const refreshedSha = refreshed && refreshed.sha ? refreshed.sha : null;
+                        console.log('[GitHub refreshed]', { refreshedSha, branch: resolvedConfig.branch, filePath: resolvedConfig.filePath });
+
+                        if (refreshedSha && !forceRefresh) {
+                            return performUploadWithRetry(true);
+                        }
+
+                        if (refreshedSha) {
+                            body.sha = refreshedSha;
+                            const retryResponse = await fetch(repoUrl, {
+                                method: 'PUT',
+                                headers: {
+                                    'Accept': 'application/vnd.github+json',
+                                    'Authorization': `Bearer ${resolvedConfig.token}`,
+                                    'Content-Type': 'application/json',
+                                    'X-GitHub-Api-Version': '2022-11-28'
+                                },
+                                body: JSON.stringify(body)
+                            });
+
+                            if (retryResponse.ok) return retryResponse;
+                            const retryText = await retryResponse.text();
+                            throw new Error(`GitHub 업로드 실패: ${retryResponse.status} ${retryText}`);
+                        }
                     }
 
                     throw new Error(`GitHub 업로드 실패: ${response.status} ${apiMessage}`);
@@ -2517,27 +2555,37 @@
     function movePlannerDate(oldDate, newDate) {
         if (!oldDate || !newDate || oldDate === newDate) return;
 
-        const existing = plannerDatabase[oldDate] || [];
-        const destination = plannerDatabase[newDate] || [];
+        const selectedRow = document.querySelector('.selected-todo-row');
+        if (selectedRow) {
+            const rowIndex = Array.from(document.querySelectorAll('#todo-tbody tr')).indexOf(selectedRow);
+            const sourceList = plannerDatabase[oldDate] || [];
+            const movingItem = sourceList[rowIndex];
 
-        if (Object.prototype.hasOwnProperty.call(plannerDatabase, newDate) && destination.length > 0) {
-            const overwrite = confirm(`'${newDate}' 날짜에 일정이 이미 있습니다. 기존 일정에 덮어쓸까요?`);
-            if (!overwrite) {
-                document.getElementById('memo-title').value = oldDate;
+            if (movingItem) {
+                const nextSourceList = sourceList.filter((_, idx) => idx !== rowIndex);
+                const destinationList = plannerDatabase[newDate] ? [...plannerDatabase[newDate]] : [];
+                destinationList.push({ ...movingItem });
+
+                if (nextSourceList.length > 0) {
+                    plannerDatabase[oldDate] = nextSourceList;
+                } else {
+                    delete plannerDatabase[oldDate];
+                }
+
+                plannerDatabase[newDate] = destinationList;
+                currentPlannerDate = newDate;
+                loadDatePlanner(newDate);
+                handleSearch();
+                renderCalendar();
+                if (dirHandle) saveMemo(true);
                 return;
             }
         }
 
-        if (Object.prototype.hasOwnProperty.call(plannerDatabase, oldDate)) {
-            delete plannerDatabase[oldDate];
-        }
-
-        plannerDatabase[newDate] = existing;
         currentPlannerDate = newDate;
         loadDatePlanner(newDate);
         handleSearch();
         renderCalendar();
-        if (dirHandle) saveMemo(true);
     }
 
     function handleMemoTitleDateChange() {
