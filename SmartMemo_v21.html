@@ -1971,10 +1971,20 @@
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    const apiMessage = JSON.parse(errorText || '{}').message || errorText;
-                    if ((response.status === 409 || /blob sha does not match/i.test(apiMessage)) && !forceRefresh) {
+                    let apiMessage = errorText;
+                    try {
+                        apiMessage = JSON.parse(errorText || '{}').message || errorText;
+                    } catch (e) {
+                        apiMessage = errorText || 'GitHub API 오류';
+                    }
+
+                    const isShaMismatch = (response.status === 409 || response.status === 422)
+                        && /does not match|sha/i.test(apiMessage);
+
+                    if (isShaMismatch && !forceRefresh) {
                         return performUploadWithRetry(true);
                     }
+
                     throw new Error(`GitHub 업로드 실패: ${response.status} ${apiMessage}`);
                 }
 
