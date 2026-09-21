@@ -1940,35 +1940,48 @@
 
             const resolvedConfig = await resolveGithubBranch(config);
             const repoUrl = `https://api.github.com/repos/${resolvedConfig.owner}/${resolvedConfig.repoName}/contents/${encodeURIComponent(resolvedConfig.filePath).replace(/%2F/g, '/')}`;
-            const existing = await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
 
             const payload = JSON.stringify(plannerDatabase, null, 2);
             const encryptedPayload = await encryptData(payload, appPassword);
-            const content = btoa(unescape(encodeURIComponent(encryptedPayload)));
-            const body = {
-                message: `Update encrypted planner data ${new Date().toISOString()}`,
-                content,
-                branch: resolvedConfig.branch
-            };
+            const content = btoa(String.fromCharCode(...new TextEncoder().encode(encryptedPayload)));
 
-            if (existing && existing.sha) body.sha = existing.sha;
+            async function performUploadWithRetry(forceRefresh = false) {
+                const existing = forceRefresh
+                    ? await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token)
+                    : await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
 
-            const response = await fetch(repoUrl, {
-                method: 'PUT',
-                headers: {
-                    'Accept': 'application/vnd.github+json',
-                    'Authorization': `Bearer ${resolvedConfig.token}`,
-                    'Content-Type': 'application/json',
-                    'X-GitHub-Api-Version': '2022-11-28'
-                },
-                body: JSON.stringify(body)
-            });
+                const body = {
+                    message: `Update encrypted planner data ${new Date().toISOString()}`,
+                    content,
+                    branch: resolvedConfig.branch
+                };
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`GitHub 업로드 실패: ${response.status} ${errorText}`);
+                if (existing && existing.sha) body.sha = existing.sha;
+
+                const response = await fetch(repoUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Accept': 'application/vnd.github+json',
+                        'Authorization': `Bearer ${resolvedConfig.token}`,
+                        'Content-Type': 'application/json',
+                        'X-GitHub-Api-Version': '2022-11-28'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    const apiMessage = JSON.parse(errorText || '{}').message || errorText;
+                    if ((response.status === 409 || /blob sha does not match/i.test(apiMessage)) && !forceRefresh) {
+                        return performUploadWithRetry(true);
+                    }
+                    throw new Error(`GitHub 업로드 실패: ${response.status} ${apiMessage}`);
+                }
+
+                return response;
             }
 
+            await performUploadWithRetry(false);
             updateStatus('GitHub에 암호화된 데이터 저장 완료');
         } catch (err) {
             console.error(err);
