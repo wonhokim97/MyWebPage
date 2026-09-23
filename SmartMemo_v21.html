@@ -654,6 +654,10 @@
                     <label style="display:block; margin-bottom:6px; font-weight:600; color:var(--text-title);">GitHub Personal Access Token</label>
                     <input id="github-token-input" type="password" placeholder="ghp_xxx 또는 github_pat_xxx" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color); border-radius:6px;">
                 </div>
+                <div style="display:flex; align-items:center; gap:8px; padding-top:4px;">
+                    <input id="github-auto-save-toggle" type="checkbox" style="width:16px; height:16px; accent-color:#4f46e5;">
+                    <label for="github-auto-save-toggle" style="font-weight:600; color:var(--text-title); cursor:pointer;">GitHub 자동 저장</label>
+                </div>
             </div>
 
             <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:18px;">
@@ -1782,7 +1786,7 @@
     const GITHUB_CONFIG_KEY = 'smartmemo_github_config';
 
     function getDefaultGithubConfig() {
-        return { repo: '', branch: 'main', filePath: 'planner_data.json', token: '' };
+        return { repo: '', branch: 'main', filePath: 'planner_data.json', token: '', autoSave: false };
     }
 
     function loadGithubConfig() {
@@ -1806,6 +1810,7 @@
         document.getElementById('github-branch-input').value = config.branch || 'main';
         document.getElementById('github-file-input').value = config.filePath || 'planner_data.json';
         document.getElementById('github-token-input').value = config.token || '';
+        document.getElementById('github-auto-save-toggle').checked = !!config.autoSave;
         modal.style.display = 'flex';
     }
 
@@ -1831,15 +1836,16 @@
         const branch = document.getElementById('github-branch-input').value.trim() || 'main';
         const filePath = document.getElementById('github-file-input').value.trim() || 'planner_data.json';
         const token = document.getElementById('github-token-input').value.trim();
+        const autoSave = !!document.getElementById('github-auto-save-toggle').checked;
 
         if (!repo || !repo.includes('/')) {
             alert('GitHub 저장소를 입력해 주세요. 예: owner/repository 또는 https://github.com/owner/repository');
             return;
         }
 
-        saveGithubConfig({ repo, branch, filePath, token });
+        saveGithubConfig({ repo, branch, filePath, token, autoSave });
         closeGitHubSettingsModal();
-        updateStatus('GitHub 설정 저장 완료');
+        updateStatus(autoSave ? 'GitHub 자동 저장 설정 완료' : 'GitHub 설정 저장 완료');
     }
 
     function getGithubRepoParts() {
@@ -1859,8 +1865,23 @@
             repoName: parts.slice(1).join('/'),
             branch: (config.branch || 'main').trim() || 'main',
             filePath: (config.filePath || 'planner_data.json').trim().replace(/^\/+/, '') || 'planner_data.json',
-            token: (config.token || '').trim()
+            token: (config.token || '').trim(),
+            autoSave: !!config.autoSave
         };
+    }
+
+    function scheduleGithubAutoSave() {
+        const config = loadGithubConfig();
+        if (!config.autoSave || !config.repo || !config.token || !appPassword) return;
+
+        clearTimeout(window.githubAutoSaveTimer);
+        window.githubAutoSaveTimer = setTimeout(async () => {
+            try {
+                await uploadToGitHub();
+            } catch (err) {
+                console.error('GitHub 자동 저장 실패:', err);
+            }
+        }, 1800);
     }
 
     async function requestGithubFileInfo(url, token) {
@@ -1945,38 +1966,40 @@
             const encryptedPayload = await encryptData(payload, appPassword);
             const content = btoa(String.fromCharCode(...new TextEncoder().encode(encryptedPayload)));
 
-            async function performUploadWithRetry(forceRefresh = false) {
-                const existing = await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
-                const existingSha = existing && existing.sha ? existing.sha : null;
-                console.log('[GitHub upload]', {
-                    forceRefresh,
-                    owner: resolvedConfig.owner,
-                    repo: resolvedConfig.repoName,
-                    branch: resolvedConfig.branch,
-                    filePath: resolvedConfig.filePath,
-                    existingSha
-                });
+            async function performUploadWithRetry(maxAttempts = 3) {
+                for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                    const existing = await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
+                    const existingSha = existing && existing.sha ? existing.sha : null;
+                    console.log('[GitHub upload]', {
+                        attempt: attempt + 1,
+                        owner: resolvedConfig.owner,
+                        repo: resolvedConfig.repoName,
+                        branch: resolvedConfig.branch,
+                        filePath: resolvedConfig.filePath,
+                        existingSha
+                    });
 
-                const body = {
-                    message: `Update encrypted planner data ${new Date().toISOString()}`,
-                    content,
-                    branch: resolvedConfig.branch
-                };
+                    const body = {
+                        message: `Update encrypted planner data ${new Date().toISOString()}`,
+                        content,
+                        branch: resolvedConfig.branch
+                    };
 
-                if (existingSha) body.sha = existingSha;
+                    if (existingSha) body.sha = existingSha;
 
-                const response = await fetch(repoUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Accept': 'application/vnd.github+json',
-                        'Authorization': `Bearer ${resolvedConfig.token}`,
-                        'Content-Type': 'application/json',
-                        'X-GitHub-Api-Version': '2022-11-28'
-                    },
-                    body: JSON.stringify(body)
-                });
+                    const response = await fetch(repoUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Accept': 'application/vnd.github+json',
+                            'Authorization': `Bearer ${resolvedConfig.token}`,
+                            'Content-Type': 'application/json',
+                            'X-GitHub-Api-Version': '2022-11-28'
+                        },
+                        body: JSON.stringify(body)
+                    });
 
-                if (!response.ok) {
+                    if (response.ok) return response;
+
                     const errorText = await response.text();
                     let apiMessage = errorText;
                     try {
@@ -1992,44 +2015,22 @@
                         status: response.status,
                         message: apiMessage,
                         existingSha,
-                        forceRefresh
+                        attempt: attempt + 1
                     });
 
-                    if (isShaMismatch) {
-                        const refreshed = await requestGithubFileInfo(`${repoUrl}?ref=${encodeURIComponent(resolvedConfig.branch)}`, resolvedConfig.token);
-                        const refreshedSha = refreshed && refreshed.sha ? refreshed.sha : null;
-                        console.log('[GitHub refreshed]', { refreshedSha, branch: resolvedConfig.branch, filePath: resolvedConfig.filePath });
-
-                        if (refreshedSha && !forceRefresh) {
-                            return performUploadWithRetry(true);
-                        }
-
-                        if (refreshedSha) {
-                            body.sha = refreshedSha;
-                            const retryResponse = await fetch(repoUrl, {
-                                method: 'PUT',
-                                headers: {
-                                    'Accept': 'application/vnd.github+json',
-                                    'Authorization': `Bearer ${resolvedConfig.token}`,
-                                    'Content-Type': 'application/json',
-                                    'X-GitHub-Api-Version': '2022-11-28'
-                                },
-                                body: JSON.stringify(body)
-                            });
-
-                            if (retryResponse.ok) return retryResponse;
-                            const retryText = await retryResponse.text();
-                            throw new Error(`GitHub 업로드 실패: ${retryResponse.status} ${retryText}`);
-                        }
+                    if (!isShaMismatch) {
+                        throw new Error(`GitHub 업로드 실패: ${response.status} ${apiMessage}`);
                     }
 
-                    throw new Error(`GitHub 업로드 실패: ${response.status} ${apiMessage}`);
+                    if (attempt === maxAttempts - 1) {
+                        throw new Error(`GitHub 업로드 실패: ${response.status} ${apiMessage}`);
+                    }
                 }
 
-                return response;
+                throw new Error('GitHub 업로드 실패: 파일 SHA 동기화 재시도에 실패했습니다.');
             }
 
-            await performUploadWithRetry(false);
+            await performUploadWithRetry(3);
             updateStatus('GitHub에 암호화된 데이터 저장 완료');
         } catch (err) {
             console.error(err);
@@ -2458,6 +2459,7 @@
             handleSearch();
             renderCalendar();
             updateStatus(t('autoSaved'));
+            scheduleGithubAutoSave();
         } catch (err) {
             console.error('saveMemo error:', err);
             if (!silent) alert('저장 실패: ' + err.message);
