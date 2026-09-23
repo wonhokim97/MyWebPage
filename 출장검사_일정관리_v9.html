@@ -831,14 +831,22 @@
             return await response.json();
         }
 
-        async function uploadToGitHub() {
+        function hasGithubSyncSettings() {
+            const config = loadGithubConfig();
+            return Boolean(config.repo && config.token && config.filePath);
+        }
+
+        async function uploadToGitHub(options = {}) {
+            const { silent = false } = options;
             try {
                 const password = ensureAppPassword();
                 const config = getGithubRepoParts();
                 if (!config.token) {
-                    alert('GitHub Personal Access Token을 먼저 저장해 주세요.');
-                    openGitHubSettingsModal();
-                    return;
+                    if (!silent) {
+                        alert('GitHub Personal Access Token을 먼저 저장해 주세요.');
+                        openGitHubSettingsModal();
+                    }
+                    return false;
                 }
 
                 const resolvedConfig = await resolveGithubBranch(config);
@@ -934,21 +942,28 @@
                 await performUploadWithRetry(false);
                 saveLocalDatabase();
                 addLog(`GitHub에 암호화된 데이터가 저장되었습니다. (${resolvedConfig.owner}/${resolvedConfig.repoName}/${resolvedConfig.filePath})`);
+                return true;
             } catch (error) {
                 console.error(error);
-                alert(`GitHub 저장 실패: ${error.message}`);
+                if (!silent) {
+                    alert(`GitHub 저장 실패: ${error.message}`);
+                }
                 addLog(`GitHub 저장 실패: ${error.message}`);
+                return false;
             }
         }
 
-        async function downloadFromGitHub() {
+        async function downloadFromGitHub(options = {}) {
+            const { silent = false } = options;
             try {
                 const password = ensureAppPassword();
                 const config = getGithubRepoParts();
                 if (!config.token) {
-                    alert('GitHub Personal Access Token을 먼저 저장해 주세요.');
-                    openGitHubSettingsModal();
-                    return;
+                    if (!silent) {
+                        alert('GitHub Personal Access Token을 먼저 저장해 주세요.');
+                        openGitHubSettingsModal();
+                    }
+                    return false;
                 }
 
                 const resolvedConfig = await resolveGithubBranch(config);
@@ -1001,11 +1016,44 @@
                 renderCalendar();
                 searchSchedules();
                 addLog(`GitHub에서 암호화된 데이터를 불러왔습니다. (${resolvedConfig.owner}/${resolvedConfig.repoName}/${resolvedConfig.filePath})`);
+                return true;
             } catch (error) {
                 console.error(error);
-                alert(`GitHub 불러오기 실패: ${error.message}`);
+                if (!silent) {
+                    alert(`GitHub 불러오기 실패: ${error.message}`);
+                }
                 addLog(`GitHub 불러오기 실패: ${error.message}`);
+                return false;
             }
+        }
+
+        async function autoSyncGitHub() {
+            if (!hasGithubSyncSettings()) {
+                return;
+            }
+
+            await downloadFromGitHub({ silent: true });
+            await uploadToGitHub({ silent: true });
+        }
+
+        async function startAutoGitHubSync() {
+            if (!hasGithubSyncSettings()) {
+                return;
+            }
+
+            try {
+                await downloadFromGitHub({ silent: true });
+                addLog('GitHub 자동 불러오기가 초기화되었습니다.');
+            } catch (error) {
+                addLog(`GitHub 자동 불러오기 초기화 실패: ${error.message}`);
+            }
+
+            setInterval(async () => {
+                if (!hasGithubSyncSettings()) {
+                    return;
+                }
+                await uploadToGitHub({ silent: true });
+            }, 30000);
         }
 
         // IndexedDB 로컬 폴더 핸들 동기화 로직
@@ -1732,6 +1780,7 @@
         window.onload = async () => {
             await loadFallbackData();
             await tryAutoReconnect();
+            await startAutoGitHubSync();
         };
     </script>
 </body>
